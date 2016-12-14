@@ -7,6 +7,7 @@ Bundle of Perceval backends for Mozilla ecosystem.
 The backends currently managed by this package support the next repositories:
 
 * Kitsune
+* MozillaClub
 * ReMo
 
 ## Requirements
@@ -37,6 +38,12 @@ $ python3 setup.py install
 
 ```
 $ perceval kitsune --offset 373990
+```
+
+### Mozilla Club Events
+
+```
+$ perceval mozillaclub
 ```
 
 ### ReMo
