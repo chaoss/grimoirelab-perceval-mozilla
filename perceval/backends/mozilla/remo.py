@@ -70,7 +70,7 @@ class ReMo(Backend):
     :param tag: label used to mark the data
     :param cache: cache object to store raw data
     """
-    version = '0.4.0'
+    version = '0.5.0'
 
     def __init__(self, url=None, tag=None, cache=None):
         if not url:
