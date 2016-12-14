@@ -301,8 +301,8 @@ class MozillaClubParser:
         cell_cols = len(event_fields.keys())
 
         # Fill the empty event with all fields as None
-        for i in range (1, cell_cols+1):
-            event[event_fields[str(i)]] = None
+        for col in event_fields:
+            event[event_fields[col]] = None
         while True and cells:
             # Get all cols (cells) for the event (row)
             cell = cells[0]

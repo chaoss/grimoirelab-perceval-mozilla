@@ -52,7 +52,7 @@ def read_file(filename, mode='r'):
     return content
 
 def configure_http_server():
-    bodies_entries_job = read_file('data/mozillaclub/feed.json')
+    bodies_events_job = read_file('data/mozillaclub/feed.json')
 
     http_requests = []
 
@@ -60,7 +60,7 @@ def configure_http_server():
         last_request = httpretty.last_request()
 
         if uri.startswith(MozillaClub_FEED_URL):
-            body = bodies_entries_job
+            body = bodies_events_job
         else:
             body = ''
 
@@ -117,14 +117,14 @@ class TestMozillaClubBackend(unittest.TestCase):
 
     @httpretty.activate
     def test_fetch(self):
-        """Test whether a list of entries is returned"""
+        """Test whether a list of events is returned"""
 
         http_requests = configure_http_server()
 
-        # Test fetch entries from feed
+        # Test fetch events from feed
         mozillaclub = MozillaClub(MozillaClub_FEED_URL)
-        entries = [entry for entry in mozillaclub.fetch()]
-        self.assertEqual(len(entries), 92)
+        events = [event for event in mozillaclub.fetch()]
+        self.assertEqual(len(events), 92)
         self.assertEqual(len(http_requests), 1)
 
         # Test metadata
@@ -136,23 +136,44 @@ class TestMozillaClubBackend(unittest.TestCase):
                      'Mozilla HETEC Club')]
 
         for x in range(len(expected)):
-            entry = entries[x]
-            self.assertEqual(entry['origin'], 'http://example.com/feed')
-            self.assertEqual(entry['uuid'], expected[x][0])
-            self.assertEqual(entry['updated_on'], expected[x][1])
-            self.assertEqual(entry['category'], 'event')
-            self.assertEqual(entry['tag'], 'http://example.com/feed')
-            self.assertEqual(entry['data']['Club Name'], expected[x][2])
+            event = events[x]
+            self.assertEqual(event['origin'], 'http://example.com/feed')
+            self.assertEqual(event['uuid'], expected[x][0])
+            self.assertEqual(event['updated_on'], expected[x][1])
+            self.assertEqual(event['category'], 'event')
+            self.assertEqual(event['tag'], 'http://example.com/feed')
+            self.assertEqual(event['data']['Club Name'], expected[x][2])
+
+    @httpretty.activate
+    def test_empty_cells(self):
+        """
+        Test whether the empty fields cells that are not included in the json
+        feed, are filled with None in the generated event.
+        """
+
+        http_requests = configure_http_server()
+
+        # https://docs.google.com/spreadsheets/d/1QHl2bjBhMslyFzR5XXPzMLdzzx7oeSKTbgR5PM8qp64/pubhtml
+        # Club Link is always empty so it is not included in
+        # https://spreadsheets.google.com/feeds/cells/1QHl2bjBhMslyFzR5XXPzMLdzzx7oeSKTbgR5PM8qp64/ohaibtm/public/values?alt=json
+        # Check that the field 'Club Link' exist in the items with None value
+
+        mozillaclub = MozillaClub(MozillaClub_FEED_URL)
+        events = [event for event in mozillaclub.fetch()]
+        self.assertEqual(len(events), 92)
+        for event in events:
+            self.assertEqual('Club Link' in event['data'].keys(), True)
+            self.assertEqual(event['data']['Club Link'], None)
 
     @httpretty.activate
     def test_fetch_empty(self):
-        """Test whether it works when no entries are fetched"""
+        """Test whether it works when no events are fetched"""
 
         body = """
             {
                 "encoding": "UTF-8",
                 "feed": {
-                "entry": []
+                "event": []
                 }
             }
         """
@@ -161,9 +182,9 @@ class TestMozillaClubBackend(unittest.TestCase):
                                body=body, status=200)
 
         mozillaclub = MozillaClub(MozillaClub_FEED_URL)
-        entries = [entry for entry in mozillaclub.fetch()]
+        events = [event for event in mozillaclub.fetch()]
 
-        self.assertEqual(len(entries), 0)
+        self.assertEqual(len(events), 0)
 
 
 class TestMozillaClubBackendCache(unittest.TestCase):
@@ -181,28 +202,28 @@ class TestMozillaClubBackendCache(unittest.TestCase):
 
         http_requests = configure_http_server()
 
-        # First, we fetch the entries from the server, storing them
+        # First, we fetch the events from the server, storing them
         # in a cache
         cache = Cache(self.tmp_path)
         mozillaclub = MozillaClub(MozillaClub_FEED_URL, cache=cache)
 
-        entries = [entry for entry in mozillaclub.fetch()]
+        events = [event for event in mozillaclub.fetch()]
         self.assertEqual(len(http_requests), 1)
 
-        # Now, we get the entries from the cache.
+        # Now, we get the events from the cache.
         # The contents should be the same and there won't be
         # any new request to the server
-        cached_entries = [entry for entry in mozillaclub.fetch_from_cache()]
-        self.assertEqual(len(cached_entries), len(entries))
+        cached_events = [event for event in mozillaclub.fetch_from_cache()]
+        self.assertEqual(len(cached_events), len(events))
         self.assertEqual(len(http_requests), 1)  # no more requests done
 
     def test_fetch_from_empty_cache(self):
-        """Test if there are not any entries returned when the cache is empty"""
+        """Test if there are not any events returned when the cache is empty"""
 
         cache = Cache(self.tmp_path)
         mozillaclub = MozillaClub(MozillaClub_FEED_URL, cache=cache)
-        cached_entries = [entry for entry in mozillaclub.fetch_from_cache()]
-        self.assertEqual(len(cached_entries), 0)
+        cached_events = [event for event in mozillaclub.fetch_from_cache()]
+        self.assertEqual(len(cached_events), 0)
 
     def test_fetch_from_non_set_cache(self):
         """Test if a error is raised when the cache was not set"""
@@ -210,7 +231,7 @@ class TestMozillaClubBackendCache(unittest.TestCase):
         mozillaclub = MozillaClub(MozillaClub_FEED_URL)
 
         with self.assertRaises(CacheError):
-            _ = [entry for entry in mozillaclub.fetch_from_cache()]
+            _ = [event for event in mozillaclub.fetch_from_cache()]
 
 
 class TestMozillaClubCommand(unittest.TestCase):
@@ -248,8 +269,8 @@ class TestMozillaClubClient(unittest.TestCase):
         client = MozillaClubClient(MozillaClub_FEED_URL)
 
     @httpretty.activate
-    def test_get_entries(self):
-        """Test get_entries API call"""
+    def test_get_events(self):
+        """Test get_events API call"""
 
         # Set up a mock HTTP server
         body = read_file('data/mozillaclub/feed.json')
