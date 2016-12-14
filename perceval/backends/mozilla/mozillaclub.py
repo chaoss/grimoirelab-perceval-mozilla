@@ -41,6 +41,30 @@ logger = logging.getLogger(__name__)
 
 MOZILLA_CLUB_URL = "https://spreadsheets.google.com/feeds/cells/1QHl2bjBhMslyFzR5XXPzMLdzzx7oeSKTbgR5PM8qp64/ohaibtm/public/values?alt=json"
 
+EVENT_TEMPLATE = {
+    "1": "Status",
+    "2": "Date of Event",
+    "3": "Club Name",
+    "4": "Country",
+    "5": "Your Name",
+    "6": "Your Twitter Handle (Optional)",
+    "7": "Event Description",
+    "8": "Attendance",
+    "9": "Club Link",
+    "10": "City",
+    "11": "Event Creations",
+    "12": "Web Literacy Skills",
+    "13": "Links to Curriculum (Optional)",
+    "14": "Links to Blogpost (Optional)",
+    "15": "Links to Video (Optional)",
+    "16": "Links to Photos (Optional)",
+    "17": "Feedback from Attendees",
+    "18": "Your Feedback",
+    "19": "Timestamp",
+    "20": "Event Cover Photo"
+}
+
+
 class MozillaClub(Backend):
     """MozillaClub backend for Perceval.
 
@@ -52,88 +76,12 @@ class MozillaClub(Backend):
     """
     version = '0.1.0'
 
-    event_template = {
-        "1": "Status",
-        "2": "Date of Event",
-        "3": "Club Name",
-        "4": "Country",
-        "5": "Your Name",
-        "6": "Your Twitter Handle (Optional)",
-        "7": "Event Description",
-        "8": "Attendance",
-        "9": "Club Link",
-        "10": "City",
-        "11": "Event Creations",
-        "12": "Web Literacy Skills",
-        "13": "Links to Curriculum (Optional)",
-        "14": "Links to Blogpost (Optional)",
-        "15": "Links to Video (Optional)",
-        "16": "Links to Photos (Optional)",
-        "17": "Feedback from Attendees",
-        "18": "Your Feedback",
-        "19": "Timestamp",
-        "20": "Event Cover Photo"
-    }
-
     def __init__(self, url=MOZILLA_CLUB_URL, cache=None, tag=None):
         origin = url
         self.url = url
         super().__init__(origin, tag=tag, cache=cache)
         self.client = MozillaClubClient(url)
         self.__users = {}  # internal users cache
-
-    def __get_event_fields(self, cells):
-        """ Get the events fields (columns) from the cells received """
-
-        event_fields = {}
-        # Check that the columns names are the same we have as template
-        # Create the event template from the data retrieved
-        column_names = True
-        while column_names:
-            cell = cells[0]
-            row = cell['gs$cell']['row']
-            if int(row) > 1:
-                break
-            # Remove the cells with column names
-            cell = cells.pop(0)
-            col = cell['gs$cell']['col']
-            name = cell['content']['$t']
-            event_fields[col] = name
-            if col in MozillaClub.event_template:
-                if event_fields[col] != MozillaClub.event_template[col]:
-                    logger.warning("Event template changed in spreadsheet %s vs %s",
-                                    name, MozillaClub.event_template[col])
-            else:
-                logger.warning("Event template changed in spreadsheet. New column: %s", name)
-        return event_fields
-
-    def __get_next_event(self, event_fields, cells):
-        """ Get next event from the remaining the cells """
-        event = {}
-        last_col = 0
-        cell_cols = len(event_fields.keys())
-
-        # Fill the empty event with all fields as None
-        for i in range (1, cell_cols+1):
-            event[event_fields[str(i)]] = None
-        while True and cells:
-            # Get all cols (cells) for the event (row)
-            cell = cells[0]
-            col = cell['gs$cell']['col']
-            if int(col) < int(last_col):
-                # new event (row) detected: new cell column lower than last
-                break
-            else:
-                # The next cell is for the current row (event)
-                cell = cells.pop(0)
-            event[event_fields[str(col)]] = cell['content']['$t']
-            if int(col) >= cell_cols:
-                # row (event) completed, all fields (cols) read
-                break
-            last_col = col
-
-        return event
-
 
     @metadata
     def fetch(self):
@@ -142,10 +90,6 @@ class MozillaClub(Backend):
         The method retrieves, from a MozillaClub url, the
         events. The data is a Google spreadsheet retrieved using
         the feed API REST.
-
-        Events are rows in the spreadsheet. The columns are the fields
-        for the event. The JSON retrieved from the spreadsheet feed is
-        a plain list with all the cells from all the rows.
 
         :returns: a generator of events
         """
@@ -162,31 +106,13 @@ class MozillaClub(Backend):
         sheet_json = json.loads(raw_cells)
         self._flush_cache_queue()
 
-        cells = sheet_json['feed']['entry']
-        if len(cells) == 0:
-            logger.info("Total number of events: %i", nevents)
-            return
+        parser = MozillaClubParser()
 
-        event_fields = self.__get_event_fields(cells)
-
-        # Process all events reading the rows according to the event template
-        # The only way to detect the end of row is looking to the
-        # number of column. When the max number is reached (cell_cols) the next
-        # cell is from the next row.
-        # The first while is for looping rows and the second columns
-        while cells:
-            # Process the next row (event) getting all cols to build the event
-            event = self.__get_next_event(event_fields, cells)
-
-            if event['Date of Event'] is None or event['Club Name'] is None:
-                logger.error("Wrong event data: %s", event)
-                nevents_wrong += 1
-                continue
+        for event in parser.parse(sheet_json):
             yield event
             nevents += 1
 
         logger.info("Total number of events: %i", nevents)
-        logger.info("Total number of wrong events: %i", nevents_wrong)
 
     @metadata
     def fetch_from_cache(self):
@@ -205,27 +131,16 @@ class MozillaClub(Backend):
 
         cache_items = next(self.cache.retrieve())
         sheet_json = json.loads(cache_items)
-        cells = sheet_json['feed']['entry']
 
-        event_fields = self.__get_event_fields(cells)
+        parser = MozillaClubParser()
 
         nevents = 0
-        nevents_wrong = 0
 
-        while cells:
-            # Process the next row (event) getting all cols to build the event
-            event = self.__get_next_event(event_fields, cells)
-
-            if event['Date of Event'] is None or event['Club Name'] is None:
-                logger.error("Wrong event data: %s", event)
-                nevents_wrong += 1
-                continue
+        for event in parser.parse(sheet_json):
             yield event
             nevents += 1
 
         logger.info("Total number of events from cache: %i", nevents)
-        logger.info("Total number of wrong events from cache: %i", nevents_wrong)
-
 
     @classmethod
     def has_caching(cls):
@@ -246,6 +161,7 @@ class MozillaClub(Backend):
     @staticmethod
     def metadata_id(item):
         """Extracts the identifier from an event item."""
+
         try:
             a = item.keys()
         except AttributeError:
@@ -274,7 +190,8 @@ class MozillaClub(Backend):
 
         :returns: a UNIX timestamp
         """
-        return float(str_to_datetime(item['Date of Event']).timestamp())
+        date = str_to_datetime(item['Date of Event'])
+        return float(date.timestamp())
 
 
 class MozillaClubClient:
@@ -293,6 +210,7 @@ class MozillaClubClient:
 
     def call(self, uri):
         """Run an API command.
+
         :param params: dict with the HTTP parameters needed to run
             the given command
         """
@@ -304,12 +222,104 @@ class MozillaClubClient:
         return req.text
 
     def get_cells(self):
-        """Retrieve all cells from the spreadsheet"""
+        """Retrieve all cells from the spreadsheet."""
 
         logging.info("Retrieving all cells spreadsheet data ...")
         raw_cells = self.call(self.url)
 
         return raw_cells
+
+
+class MozillaClubParser:
+    """Git log parser.
+
+    This class parses a string in JSON format from a Google Spreadsheet. The
+    feed includes all the cells in a list.
+
+    Events are rows in the spreadsheet. The columns are the fields
+    for the event. The JSON retrieved from the spreadsheet feed is
+    a plain list with all the cells from all the rows.
+    """
+    def parse(self, sheet_json):
+        """Parse the MozillaClub spreadsheet feed cells json."""
+
+        nevents_wrong = 0
+
+        cells = sheet_json['feed']['entry']
+
+        event_fields = self.__get_event_fields(cells)
+
+        # Process all events reading the rows according to the event template
+        # The only way to detect the end of row is looking to the
+        # number of column. When the max number is reached (cell_cols) the next
+        # cell is from the next row.
+        # The first while is for looping rows and the second columns
+        while cells:
+            # Process the next row (event) getting all cols to build the event
+            event = self.__get_next_event(event_fields, cells)
+
+            if event['Date of Event'] is None or event['Club Name'] is None:
+                logger.error("Wrong event data: %s", event)
+                nevents_wrong += 1
+                continue
+            yield event
+
+        logger.info("Total number of wrong events: %i", nevents_wrong)
+
+    def __get_event_fields(self, cells):
+        """Get the events fields (columns) from the cells received."""
+
+        event_fields = {}
+        # The cells in the first row are the column names
+        # Check that the columns names are the same we have as template
+        # Create the event template from the data retrieved
+        column_names = True
+        while column_names and cells:
+            cell = cells[0]
+            row = cell['gs$cell']['row']
+            if int(row) > 1:
+                # When the row number >1 the column row is finished
+                break
+            # Get the cells with column names and remove from cells
+            cell = cells.pop(0)
+            col = cell['gs$cell']['col']
+            name = cell['content']['$t']
+            event_fields[col] = name
+            if col in EVENT_TEMPLATE:
+                if event_fields[col] != EVENT_TEMPLATE[col]:
+                    logger.warning("Event template changed in spreadsheet %s vs %s",
+                                    name, EVENT_TEMPLATE[col])
+            else:
+                logger.warning("Event template changed in spreadsheet. New column: %s", name)
+        return event_fields
+
+    def __get_next_event(self, event_fields, cells):
+        """Get next event from the remaining the cells."""
+
+        event = {}
+        last_col = 0
+        cell_cols = len(event_fields.keys())
+
+        # Fill the empty event with all fields as None
+        for i in range (1, cell_cols+1):
+            event[event_fields[str(i)]] = None
+        while True and cells:
+            # Get all cols (cells) for the event (row)
+            cell = cells[0]
+            col = cell['gs$cell']['col']
+            if int(col) < int(last_col):
+                # new event (row) detected: new cell column lower than last
+                break
+            else:
+                # The next cell is for the current row (event)
+                cell = cells.pop(0)
+            event[event_fields[str(col)]] = cell['content']['$t']
+            if int(col) >= cell_cols:
+                # row (event) completed, all fields (cols) read
+                break
+            last_col = col
+
+        return event
 
 
 class MozillaClubCommand(BackendCommand):
