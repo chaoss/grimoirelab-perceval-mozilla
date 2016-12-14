@@ -155,6 +155,7 @@ class TestReMoBackend(unittest.TestCase):
         self.assertEqual(items[0]['updated_on'], 1339326000.0)
         self.assertEqual(items[0]['category'], 'event')
         self.assertEqual(items[0]['tag'], MOZILLA_REPS_SERVER_URL)
+        self.assertEqual(items[0]['offset'], 0)
 
     def __check_activities_contents(self, items):
         self.assertEqual(items[0]['data']['location'], 'Bhopal, Madhya Pradesh, India')
@@ -164,6 +165,7 @@ class TestReMoBackend(unittest.TestCase):
         self.assertEqual(items[0]['updated_on'], 1478304000.0)
         self.assertEqual(items[0]['category'], 'activity')
         self.assertEqual(items[0]['tag'], MOZILLA_REPS_SERVER_URL)
+        self.assertEqual(items[0]['offset'], 0)
 
     def __check_users_contents(self, items):
         self.assertEqual(items[0]['data']['city'], 'Makati City')
@@ -173,6 +175,7 @@ class TestReMoBackend(unittest.TestCase):
         self.assertEqual(items[0]['updated_on'], 1306886400.0)
         self.assertEqual(items[0]['category'], 'user')
         self.assertEqual(items[0]['tag'], MOZILLA_REPS_SERVER_URL)
+        self.assertEqual(items[0]['offset'], 0)
 
     @httpretty.activate
     def __test_fetch(self, category='events'):
@@ -295,6 +298,7 @@ class TestReMoBackendCache(unittest.TestCase):
         self.assertEqual(len(cached_items), len(items))
         for i in range(0,len(items)):
             self.assertDictEqual(cached_items[i]['data'], items[i]['data'])
+            self.assertEqual(cached_items[i]['offset'], items[i]['offset'])
 
     def test_fetch_from_cache_events(self):
         self.__test_fetch_from_cache('events')
