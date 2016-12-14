@@ -156,6 +156,7 @@ class TestReMoBackend(unittest.TestCase):
         self.assertEqual(items[0]['category'], 'event')
         self.assertEqual(items[0]['tag'], MOZILLA_REPS_SERVER_URL)
         self.assertEqual(items[0]['offset'], 0)
+        self.assertEqual(items[3]['offset'], 3)
 
     def __check_activities_contents(self, items):
         self.assertEqual(items[0]['data']['location'], 'Bhopal, Madhya Pradesh, India')
@@ -166,6 +167,7 @@ class TestReMoBackend(unittest.TestCase):
         self.assertEqual(items[0]['category'], 'activity')
         self.assertEqual(items[0]['tag'], MOZILLA_REPS_SERVER_URL)
         self.assertEqual(items[0]['offset'], 0)
+        self.assertEqual(items[3]['offset'], 3)
 
     def __check_users_contents(self, items):
         self.assertEqual(items[0]['data']['city'], 'Makati City')
@@ -176,6 +178,7 @@ class TestReMoBackend(unittest.TestCase):
         self.assertEqual(items[0]['category'], 'user')
         self.assertEqual(items[0]['tag'], MOZILLA_REPS_SERVER_URL)
         self.assertEqual(items[0]['offset'], 0)
+        self.assertEqual(items[3]['offset'], 3)
 
     @httpretty.activate
     def __test_fetch(self, category='events'):
