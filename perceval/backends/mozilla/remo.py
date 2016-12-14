@@ -70,7 +70,7 @@ class ReMo(Backend):
     :param tag: label used to mark the data
     :param cache: cache object to store raw data
     """
-    version = '0.4.0'
+    version = '0.5.0'
 
     def __init__(self, url=None, tag=None, cache=None):
         if not url:
@@ -116,6 +116,8 @@ class ReMo(Backend):
         current_offset = offset
 
         self._purge_cache_queue()
+        # Add to the cache the offset so it can be used to recover from cache
+        self._push_cache_queue(offset)
 
         for raw_items in self.client.get_items(category, offset):
             self._push_cache_queue(raw_items)
@@ -140,6 +142,7 @@ class ReMo(Backend):
 
         logger.info("Total number of events: %i (%i total, %i offset)", nitems, titems, offset)
 
+    @remo_metadata
     @metadata
     def fetch_from_cache(self):
         """Fetch the items from the cache.
@@ -159,12 +162,18 @@ class ReMo(Backend):
         nitems = 0
 
         for item in cache_items:
+            if type(item) is int:
+                # offset from a new execution results in the cache
+                offset = item
+                item = next(cache_items)
             data = json.loads(item)
             # The raw_data is always a list of items or an item
             if 'count' in data:
                 # It is a list
                 continue
             else:
+                data['offset'] = offset
+                offset += 1
                 yield data
                 nitems += 1
 
