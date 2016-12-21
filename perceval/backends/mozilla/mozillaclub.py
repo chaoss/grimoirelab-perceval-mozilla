@@ -97,20 +97,20 @@ class MozillaClub(Backend):
         logger.info("Looking for events at url '%s'", self.url)
 
         nevents = 0  # number of events processed
-        nevents_wrong = 0  # number of events with wrong data
 
         self._purge_cache_queue()
 
         raw_cells = self.client.get_cells()
         self._push_cache_queue(raw_cells)
         sheet_json = json.loads(raw_cells)
-        self._flush_cache_queue()
 
-        parser = MozillaClubParser()
+        parser = MozillaClubParser(sheet_json)
 
-        for event in parser.parse(sheet_json):
+        for event in parser.parse():
             yield event
             nevents += 1
+
+        self._flush_cache_queue()
 
         logger.info("Total number of events: %i", nevents)
 
@@ -132,11 +132,11 @@ class MozillaClub(Backend):
         cache_items = next(self.cache.retrieve())
         sheet_json = json.loads(cache_items)
 
-        parser = MozillaClubParser()
+        parser = MozillaClubParser(sheet_json)
 
         nevents = 0
 
-        for event in parser.parse(sheet_json):
+        for event in parser.parse():
             yield event
             nevents += 1
 
@@ -240,23 +240,32 @@ class MozillaClubParser:
     for the event. The JSON retrieved from the spreadsheet feed is
     a plain list with all the cells from all the rows.
     """
-    def parse(self, sheet_json):
+
+    def __init__(self, feed):
+        self.feed = feed  # Spreadsheet feed
+        self.cells = None  # list with all cells to be processed
+        self.ncell = None  # current cell being parsed
+
+    def parse(self):
         """Parse the MozillaClub spreadsheet feed cells json."""
 
         nevents_wrong = 0
 
-        cells = sheet_json['feed']['entry']
+        if 'entry' not in self.feed['feed']:
+            return
 
-        event_fields = self.__get_event_fields(cells)
+        self.cells = self.feed['feed']['entry']
+        self.ncell = 0
+
+        event_fields = self.__get_event_fields()
 
         # Process all events reading the rows according to the event template
         # The only way to detect the end of row is looking to the
         # number of column. When the max number is reached (cell_cols) the next
         # cell is from the next row.
-        # The first while is for looping rows and the second columns
-        while cells:
+        while self.ncell < len(self.cells):
             # Process the next row (event) getting all cols to build the event
-            event = self.__get_next_event(event_fields, cells)
+            event = self.__get_next_event(event_fields)
 
             if event['Date of Event'] is None or event['Club Name'] is None:
                 logger.error("Wrong event data: %s", event)
@@ -266,22 +275,19 @@ class MozillaClubParser:
 
         logger.info("Total number of wrong events: %i", nevents_wrong)
 
-    def __get_event_fields(self, cells):
+    def __get_event_fields(self):
         """Get the events fields (columns) from the cells received."""
 
         event_fields = {}
         # The cells in the first row are the column names
         # Check that the columns names are the same we have as template
         # Create the event template from the data retrieved
-        column_names = True
-        while column_names and cells:
-            cell = cells[0]
+        while self.ncell < len(self.cells):
+            cell = self.cells[self.ncell]
             row = cell['gs$cell']['row']
             if int(row) > 1:
                 # When the row number >1 the column row is finished
                 break
-            # Get the cells with column names and remove from cells
-            cell = cells.pop(0)
             col = cell['gs$cell']['col']
             name = cell['content']['$t']
             event_fields[col] = name
@@ -291,33 +297,27 @@ class MozillaClubParser:
                                     name, EVENT_TEMPLATE[col])
             else:
                 logger.warning("Event template changed in spreadsheet. New column: %s", name)
+
+            self.ncell += 1
         return event_fields
 
-    def __get_next_event(self, event_fields, cells):
-        """Get next event from the remaining the cells."""
-
+    def __get_next_event(self, event_fields):
         event = {}
         last_col = 0
-        cell_cols = len(event_fields.keys())
 
         # Fill the empty event with all fields as None
         for col in event_fields:
             event[event_fields[col]] = None
-        while True and cells:
+        while self.ncell < len(self.cells):
             # Get all cols (cells) for the event (row)
-            cell = cells[0]
-            col = cell['gs$cell']['col']
-            if int(col) < int(last_col):
+            cell = self.cells[self.ncell]
+            ncol = int(cell['gs$cell']['col'])
+            if ncol <= last_col:
                 # new event (row) detected: new cell column lower than last
                 break
-            else:
-                # The next cell is for the current row (event)
-                cell = cells.pop(0)
-            event[event_fields[str(col)]] = cell['content']['$t']
-            if int(col) >= cell_cols:
-                # row (event) completed, all fields (cols) read
-                break
-            last_col = col
+            event[event_fields[str(ncol)]] = cell['content']['$t']
+            last_col = ncol
+            self.ncell += 1
 
         return event
 
