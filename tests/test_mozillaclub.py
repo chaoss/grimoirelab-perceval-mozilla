@@ -23,7 +23,6 @@
 #
 
 import argparse
-import json
 import shutil
 import sys
 import tempfile
@@ -128,11 +127,11 @@ class TestMozillaClubBackend(unittest.TestCase):
         self.assertEqual(len(http_requests), 1)
 
         # Test metadata
-        expected = [('a60e67f5094f325f1cc826159749eaecbd177fc9', 1460937600.0,
+        expected = [('a60e67f5094f325f1cc826159749eaecbd177fc9', 1481643844.821,
                      'Rio Mozilla Club'),
-                    ('2e6eaf1f174600d20233e5051e85d730952a8a31', 1460592000.0,
+                    ('2e6eaf1f174600d20233e5051e85d730952a8a31', 1481643844.821,
                      'Firefox club uog-skt'),
-                    ('da8820deeb01616d22d6851272e8db915efc351b', 1460764800.0,
+                    ('da8820deeb01616d22d6851272e8db915efc351b', 1481643844.821,
                      'Mozilla HETEC Club')]
 
         for x in range(len(expected)):
