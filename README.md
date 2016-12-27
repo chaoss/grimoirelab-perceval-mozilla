@@ -39,6 +39,12 @@ $ python3 setup.py install
 $ perceval kitsune --offset 373990
 ```
 
+### Mozilla Club Events
+
+```
+$ perceval mozillaclub
+```
+
 ### ReMo
 ```
 $ perceval remo
