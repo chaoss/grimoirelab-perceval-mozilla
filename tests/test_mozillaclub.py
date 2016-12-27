@@ -38,7 +38,7 @@ pkg_resources.declare_namespace('perceval.backends')
 
 from perceval.cache import Cache
 from perceval.errors import CacheError
-from perceval.backends.mozilla.mozillaclub import MozillaClub, MozillaClubCommand, MozillaClubClient
+from perceval.backends.mozilla.mozillaclub import MozillaClub, MozillaClubCommand, MozillaClubClient, MozillaClubParser
 
 
 MozillaClub_FEED_URL = 'http://example.com/feed'
@@ -214,6 +214,8 @@ class TestMozillaClubBackendCache(unittest.TestCase):
         # any new request to the server
         cached_events = [event for event in mozillaclub.fetch_from_cache()]
         self.assertEqual(len(cached_events), len(events))
+        for i in range(0,len(events)):
+            self.assertDictEqual(cached_events[i]['data'], events[i]['data'])
         self.assertEqual(len(http_requests), 1)  # no more requests done
 
     def test_fetch_from_empty_cache(self):
@@ -282,6 +284,22 @@ class TestMozillaClubClient(unittest.TestCase):
 
         self.assertEqual(response, body)
 
+class TestMozillaClubParser(unittest.TestCase):
+    """MozillaClub parser tests"""
+
+    def test_parser(self):
+        """Test if it parsers a JSON feed stream"""
+
+        with open("data/mozillaclub/feed.json", 'r') as f:
+            parser = MozillaClubParser(f.read())
+            events = [event for event in parser.parse()]
+
+        self.assertEqual(len(events), 92)
+
+        # Checking some random data
+        self.assertEqual(events[10]['City'], 'Cape Town')
+        self.assertEqual(events[45]['Links to Photos (Optional)'], None)
+        self.assertEqual(events[53]['updated'], '2016-12-13T15:44:04.821Z')
 
 if __name__ == "__main__":
     unittest.main(warnings='ignore')

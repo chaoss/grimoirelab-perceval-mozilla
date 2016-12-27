@@ -80,15 +80,14 @@ class MozillaClub(Backend):
 
     @metadata
     def fetch(self):
-        """Fetch events from the MozillaClub url.
+        """Fetch events from the MozillaClub URL.
 
-        The method retrieves, from a MozillaClub url, the
+        The method retrieves, from a MozillaClub URL, the
         events. The data is a Google spreadsheet retrieved using
         the feed API REST.
 
         :returns: a generator of events
         """
-
         logger.info("Looking for events at url '%s'", self.url)
 
         nevents = 0  # number of events processed
@@ -97,9 +96,7 @@ class MozillaClub(Backend):
 
         raw_cells = self.client.get_cells()
         self._push_cache_queue(raw_cells)
-        sheet_json = json.loads(raw_cells)
-
-        parser = MozillaClubParser(sheet_json)
+        parser = MozillaClubParser(raw_cells)
 
         for event in parser.parse():
             yield event
@@ -118,16 +115,14 @@ class MozillaClub(Backend):
         :raises CacheError: raised when an error occurs accessing the
             cache
         """
-
         logger.info("Retrieving cached events: '%s'", self.url)
 
         if not self.cache:
             raise CacheError(cause="cache instance was not provided")
 
         cache_items = next(self.cache.retrieve())
-        sheet_json = json.loads(cache_items)
 
-        parser = MozillaClubParser(sheet_json)
+        parser = MozillaClubParser(cache_items)
 
         nevents = 0
 
@@ -157,7 +152,7 @@ class MozillaClub(Backend):
     def metadata_id(item):
         """Extracts the identifier from an event item."""
 
-        return str(item['Date of Event']+"_"+item['Club Name'])
+        return str(item['Date of Event'] + "_" + item['Club Name'])
 
     @staticmethod
     def metadata_category(item):
@@ -194,7 +189,6 @@ class MozillaClubClient:
 
     :raises HTTPError: when an error occurs doing the request
     """
-
     def __init__(self, url):
         self.url = url
 
@@ -281,7 +275,6 @@ class MozillaClubParser:
         }
     }
     """
-
     def __init__(self, feed):
         self.feed = feed  # Spreadsheet feed
         self.cells = None  # list with all cells to be processed
@@ -292,10 +285,12 @@ class MozillaClubParser:
 
         nevents_wrong = 0
 
-        if 'entry' not in self.feed['feed']:
+        feed_json = json.loads(self.feed)
+
+        if 'entry' not in feed_json['feed']:
             return
 
-        self.cells = self.feed['feed']['entry']
+        self.cells = feed_json['feed']['entry']
         self.ncell = 0
 
         event_fields = self.__get_event_fields()
