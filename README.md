@@ -7,6 +7,7 @@ Bundle of Perceval backends for Mozilla ecosystem.
 The backends currently managed by this package support the next repositories:
 
 * Kitsune
+* MozillaClub
 * ReMo
 
 ## Requirements
