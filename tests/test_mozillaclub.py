@@ -22,7 +22,6 @@
 #     Alvaro del Castillo <acs@bitergia.com>
 #
 
-import argparse
 import shutil
 import sys
 import tempfile
@@ -36,6 +35,7 @@ import pkg_resources
 sys.path.insert(0, '..')
 pkg_resources.declare_namespace('perceval.backends')
 
+from perceval.backend import BackendCommandArgumentParser
 from perceval.cache import Cache
 from perceval.errors import CacheError
 from perceval.backends.mozilla.mozillaclub import MozillaClub, MozillaClubCommand, MozillaClubClient, MozillaClubParser
@@ -236,24 +236,27 @@ class TestMozillaClubBackendCache(unittest.TestCase):
 
 
 class TestMozillaClubCommand(unittest.TestCase):
+    """Tests for MozillaClubCommand class"""
 
-    @httpretty.activate
-    def test_parsing_on_init(self):
-        """Test if the class is initialized"""
+    def test_backend_class(self):
+        """Test if the backend class is MozillaClub"""
 
-        args = ['--tag', 'test', MozillaClub_FEED_URL]
+        self.assertIs(MozillaClubCommand.BACKEND, MozillaClub)
 
-        cmd = MozillaClubCommand(*args)
-        self.assertIsInstance(cmd.parsed_args, argparse.Namespace)
-        self.assertEqual(cmd.parsed_args.url, MozillaClub_FEED_URL)
-        self.assertEqual(cmd.parsed_args.tag, 'test')
-        self.assertIsInstance(cmd.backend, MozillaClub)
+    def test_setup_cmd_parser(self):
+        """Test if it parser object is correctly initialized"""
 
-    def test_argument_parser(self):
-        """Test if it returns a argument parser object"""
+        parser = MozillaClubCommand.setup_cmd_parser()
+        self.assertIsInstance(parser, BackendCommandArgumentParser)
 
-        parser = MozillaClubCommand.create_argument_parser()
-        self.assertIsInstance(parser, argparse.ArgumentParser)
+        args = [MozillaClub_FEED_URL,
+                '--tag', 'test',
+                '--no-cache']
+
+        parsed_args = parser.parse(*args)
+        self.assertEqual(parsed_args.url, MozillaClub_FEED_URL)
+        self.assertEqual(parsed_args.tag, 'test')
+        self.assertEqual(parsed_args.no_cache, True)
 
 
 class TestMozillaClubClient(unittest.TestCase):
@@ -283,6 +286,7 @@ class TestMozillaClubClient(unittest.TestCase):
         response = client.get_cells()
 
         self.assertEqual(response, body)
+
 
 class TestMozillaClubParser(unittest.TestCase):
     """MozillaClub parser tests"""

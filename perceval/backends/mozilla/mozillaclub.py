@@ -26,8 +26,10 @@ import os.path
 
 import requests
 
-from ...backend import Backend, BackendCommand, metadata
-from ...cache import Cache
+from ...backend import (Backend,
+                        BackendCommand,
+                        BackendCommandArgumentParser,
+                        metadata)
 from ...errors import CacheError
 
 from ...utils import DEFAULT_DATETIME, str_to_datetime
@@ -364,73 +366,17 @@ class MozillaClubParser:
 class MozillaClubCommand(BackendCommand):
     """Class to run MozillaClub backend from the command line."""
 
-    def __init__(self, *args):
-        super().__init__(*args)
-        self.url = self.parsed_args.url
-        self.tag = self.parsed_args.tag
-        self.outfile = self.parsed_args.outfile
+    BACKEND = MozillaClub
 
-        if not self.parsed_args.no_cache:
-            if not self.parsed_args.cache_path:
-                base_path = os.path.expanduser('~/.perceval/cache/')
-            else:
-                base_path = self.parsed_args.cache_path
-
-            cache_path = os.path.join(base_path, self.url)
-
-            cache = Cache(cache_path)
-
-            if self.parsed_args.clean_cache:
-                cache.clean()
-            else:
-                cache.backup()
-        else:
-            cache = None
-
-        self.backend = MozillaClub(cache=cache, tag=self.tag)
-
-    def run(self):
-        """Fetch and print the Club Events data.
-
-        This method runs the backend to fetch the events.
-        Events are converted to JSON objects and printed to the
-        defined output.
-        """
-        if self.parsed_args.fetch_cache:
-            events = self.backend.fetch_from_cache()
-        else:
-            events = self.backend.fetch()
-
-        try:
-            for event in events:
-                obj = json.dumps(event, indent=4, sort_keys=True)
-                self.outfile.write(obj)
-                self.outfile.write('\n')
-        except requests.exceptions.HTTPError as e:
-            raise requests.exceptions.HTTPError(str(e.response.json()))
-        except IOError as e:
-            raise RuntimeError(str(e))
-        except Exception as e:
-            if self.backend.cache:
-                self.backend.cache.recover()
-            raise RuntimeError(str(e))
-
-    @classmethod
-    def create_argument_parser(cls):
+    @staticmethod
+    def setup_cmd_parser():
         """Returns the MozillaClub argument parser."""
 
-        parser = super().create_argument_parser()
+        parser = BackendCommandArgumentParser(cache=True)
 
-        # Remove --from-date argument from parent parser
-        # because it is not needed by this backend
-        action = parser._option_string_actions['--from-date']
-        parser._handle_conflict_resolve(None, [('--from-date', action)])
-
-
-        # MozillaClub options
-        group = parser.add_argument_group('MozillaClub arguments')
-
-        group.add_argument("url", default=MOZILLA_CLUB_URL, nargs='?',
-                           help="MozillaClub URL")
+        # Required arguments
+        parser.parser.add_argument('url', nargs='?',
+                                   default=MOZILLA_CLUB_URL,
+                                   help="MozillaClub URL")
 
         return parser
