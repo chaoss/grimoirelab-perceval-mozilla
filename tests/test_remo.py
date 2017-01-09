@@ -22,7 +22,6 @@
 #     Alvaro del Castillo <acs@bitergia.com>
 #
 
-import argparse
 import re
 import shutil
 import sys
@@ -32,6 +31,7 @@ import unittest
 import httpretty
 import pkg_resources
 
+from perceval.backend import BackendCommandArgumentParser
 from perceval.cache import Cache
 from perceval.errors import CacheError
 
@@ -330,32 +330,31 @@ class TestReMoBackendCache(unittest.TestCase):
 
 
 class TestReMoCommand(unittest.TestCase):
+    """Tests for ReMoCommand class"""
 
-    @httpretty.activate
-    def test_parsing_on_init(self):
-        """Test if the class is initialized"""
+    def test_backend_class(self):
+        """Test if the backend class is ReMo"""
 
-        args = ['--tag', 'test', '--category', 'users', MOZILLA_REPS_SERVER_URL]
+        self.assertIs(ReMoCommand.BACKEND, ReMo)
 
-        cmd = ReMoCommand(*args)
-        self.assertIsInstance(cmd.parsed_args, argparse.Namespace)
-        self.assertEqual(cmd.parsed_args.url, MOZILLA_REPS_SERVER_URL)
-        self.assertEqual(cmd.parsed_args.tag, 'test')
-        self.assertEqual(cmd.parsed_args.category, 'users')
-        self.assertEqual(cmd.parsed_args.offset, REMO_DEFAULT_OFFSET)
-        self.assertIsInstance(cmd.backend, ReMo)
+    def test_setup_cmd_parser(self):
+        """Test if it parser object is correctly initialized"""
 
-        args = ['--tag', 'test', MOZILLA_REPS_SERVER_URL]
+        parser = ReMoCommand.setup_cmd_parser()
+        self.assertIsInstance(parser, BackendCommandArgumentParser)
 
-        cmd = ReMoCommand(*args)
-        # Default category is events
-        self.assertEqual(cmd.parsed_args.category, 'events')
+        args = [MOZILLA_REPS_SERVER_URL,
+                '--category', 'users',
+                '--tag', 'test',
+                '--no-cache',
+                '--offset', '88']
 
-    def test_argument_parser(self):
-        """Test if it returns a argument parser object"""
-
-        parser = ReMoCommand.create_argument_parser()
-        self.assertIsInstance(parser, argparse.ArgumentParser)
+        parsed_args = parser.parse(*args)
+        self.assertEqual(parsed_args.url, MOZILLA_REPS_SERVER_URL)
+        self.assertEqual(parsed_args.category, 'users')
+        self.assertEqual(parsed_args.tag, 'test')
+        self.assertEqual(parsed_args.no_cache, True)
+        self.assertEqual(parsed_args.offset, 88)
 
 
 class TestReMoClient(unittest.TestCase):

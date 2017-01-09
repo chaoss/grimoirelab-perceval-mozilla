@@ -23,13 +23,14 @@
 import functools
 import json
 import logging
-import os.path
 
 import requests
 
 
-from ...backend import Backend, BackendCommand, metadata
-from ...cache import Cache
+from ...backend import (Backend,
+                        BackendCommand,
+                        BackendCommandArgumentParser,
+                        metadata)
 from ...errors import CacheError
 from ...utils import (DEFAULT_DATETIME,
                      datetime_to_utc,
@@ -321,80 +322,23 @@ class ReMoClient:
 class ReMoCommand(BackendCommand):
     """Class to run ReMo backend from the command line."""
 
-    def __init__(self, *args):
-        super().__init__(*args)
-        self.category = self.parsed_args.category
-        self.offset = self.parsed_args.offset
-        self.tag = self.parsed_args.tag
-        self.outfile = self.parsed_args.outfile
-        self.url = self.parsed_args.url
+    BACKEND = ReMo
 
-
-        if not self.parsed_args.no_cache:
-            if not self.parsed_args.cache_path:
-                base_path = os.path.expanduser('~/.perceval/cache/')
-            else:
-                base_path = self.parsed_args.cache_path
-
-            cache_path = os.path.join(base_path, self.url)
-
-            cache = Cache(cache_path)
-
-            if self.parsed_args.clean_cache:
-                cache.clean()
-            else:
-                cache.backup()
-        else:
-            cache = None
-
-        self.backend = ReMo(self.url, tag=self.tag, cache=cache)
-
-    def run(self):
-        """Fetch and print the items.
-
-        This method runs the backend to fetch the items of a given url.
-        Items are converted to JSON objects and printed to the
-        defined output.
-        """
-        if self.parsed_args.fetch_cache:
-            items = self.backend.fetch_from_cache()
-        else:
-            items = self.backend.fetch(offset=self.offset, category=self.category)
-
-        try:
-            for item in items:
-                obj = json.dumps(item, indent=4, sort_keys=True)
-                self.outfile.write(obj)
-                self.outfile.write('\n')
-        except requests.exceptions.HTTPError as e:
-            raise requests.exceptions.HTTPError(str(e.response.json()))
-        except IOError as e:
-            raise RuntimeError(str(e))
-        except Exception as e:
-            if self.backend.cache:
-                self.backend.cache.recover()
-            raise RuntimeError(str(e))
-
-    @classmethod
-    def create_argument_parser(cls):
+    @staticmethod
+    def setup_cmd_parser():
         """Returns the ReMo argument parser."""
 
-        parser = super().create_argument_parser()
-
-        # Remove --from-date argument from parent parser
-        # because it is not needed by this backend
-        action = parser._option_string_actions['--from-date']
-        parser._handle_conflict_resolve(None, [('--from-date', action)])
+        parser = BackendCommandArgumentParser(offset=True,
+                                              cache=True)
 
         # ReMo options
-        group = parser.add_argument_group('ReMo arguments')
-        group.add_argument("--category", default='events',
+        group = parser.parser.add_argument_group('ReMo arguments')
+        group.add_argument('--category', default='events',
                            help="category could be events, activities or users")
-        group.add_argument('--offset', dest='offset',
-                            type=int, default=REMO_DEFAULT_OFFSET,
-                            help='Offset from which to start fetching items')
 
-        group.add_argument("url", default="https://reps.mozilla.org", nargs='?',
-                           help="ReMo URL (default: https://reps.mozilla.org)")
+        # Required arguments
+        parser.parser.add_argument('url', nargs='?',
+                                   default="https://reps.mozilla.org",
+                                   help="ReMo URL (default: https://reps.mozilla.org)")
 
         return parser
