@@ -23,12 +23,13 @@
 import functools
 import json
 import logging
-import os.path
 
 import requests
 
-from ...backend import Backend, BackendCommand, metadata
-from ...cache import Cache
+from ...backend import (Backend,
+                        BackendCommand,
+                        BackendCommandArgumentParser,
+                        metadata)
 from ...errors import CacheError, ParseError
 from ...utils import (DEFAULT_DATETIME,
                       str_to_datetime,
@@ -361,77 +362,18 @@ class KitsuneClient:
 class KitsuneCommand(BackendCommand):
     """Class to run Kitsune backend from the command line."""
 
-    def __init__(self, *args):
-        super().__init__(*args)
-        self.url = self.parsed_args.url
-        self.tag = self.parsed_args.tag
-        self.outfile = self.parsed_args.outfile
-        self.offset = self.parsed_args.offset
+    BACKEND = Kitsune
 
-        if not self.parsed_args.no_cache:
-            if not self.parsed_args.cache_path:
-                base_path = os.path.expanduser('~/.perceval/cache/')
-            else:
-                base_path = self.parsed_args.cache_path
-
-            cache_path = os.path.join(base_path, self.url)
-
-            cache = Cache(cache_path)
-
-            if self.parsed_args.clean_cache:
-                cache.clean()
-            else:
-                cache.backup()
-        else:
-            cache = None
-
-        self.backend = Kitsune(self.url, tag=self.tag, cache=cache)
-
-    def run(self):
-        """Fetch and print the Events.
-
-        This method runs the backend to fetch the questions of a given url.
-        Events are converted to JSON objects and printed to the
-        defined output.
-        """
-        if self.parsed_args.fetch_cache:
-            questions = self.backend.fetch_from_cache()
-        else:
-            questions = self.backend.fetch(offset=self.offset)
-
-        try:
-            for question in questions:
-                obj = json.dumps(question, indent=4, sort_keys=True)
-                self.outfile.write(obj)
-                self.outfile.write('\n')
-        except requests.exceptions.HTTPError as e:
-            raise requests.exceptions.HTTPError(str(e.response.json()))
-        except IOError as e:
-            raise RuntimeError(str(e))
-        except Exception as e:
-            if self.backend.cache:
-                self.backend.cache.recover()
-            raise RuntimeError(str(e))
-
-    @classmethod
-    def create_argument_parser(cls):
+    @staticmethod
+    def setup_cmd_parser():
         """Returns the Kitsune argument parser."""
 
-        parser = super().create_argument_parser()
+        parser = BackendCommandArgumentParser(offset=True,
+                                              cache=True)
 
-        # Remove --from-date argument from parent parser
-        # because it is not needed by this backend
-        action = parser._option_string_actions['--from-date']
-        parser._handle_conflict_resolve(None, [('--from-date', action)])
-
-        # Kitsune options
-        group = parser.add_argument_group('Kitsune arguments')
-
-        group.add_argument('--offset', dest='offset',
-                            type=int, default=DEFAULT_OFFSET,
-                            help='Offset from which to start fetching questions')
-
-        group.add_argument("url", default="https://support.mozilla.org", nargs='?',
-                           help="Kitsune URL (default: https://support.mozilla.org)")
+        # Required arguments
+        parser.parser.add_argument('url', nargs='?',
+                                   default="https://support.mozilla.org",
+                                   help="Kitsune URL (default: https://support.mozilla.org)")
 
         return parser

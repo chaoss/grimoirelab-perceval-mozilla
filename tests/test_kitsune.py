@@ -22,7 +22,6 @@
 #     Alvaro del Castillo <acs@bitergia.com>
 #
 
-import argparse
 import json
 import shutil
 import sys
@@ -33,6 +32,7 @@ import httpretty
 import pkg_resources
 import requests
 
+from perceval.backend import BackendCommandArgumentParser
 from perceval.cache import Cache
 from perceval.errors import CacheError
 from perceval.utils import str_to_datetime
@@ -300,24 +300,29 @@ class TestKitsuneBackendCache(unittest.TestCase):
 
 
 class TestKitsuneCommand(unittest.TestCase):
+    """Tests for KitsuneCommand class"""
 
-    @httpretty.activate
-    def test_parsing_on_init(self):
-        """Test if the class is initialized"""
+    def test_backend_class(self):
+        """Test if the backend class is Kitsune"""
 
-        args = ['--tag', 'test', KITSUNE_SERVER_URL]
+        self.assertIs(KitsuneCommand.BACKEND, Kitsune)
 
-        cmd = KitsuneCommand(*args)
-        self.assertIsInstance(cmd.parsed_args, argparse.Namespace)
-        self.assertEqual(cmd.parsed_args.url, KITSUNE_SERVER_URL)
-        self.assertEqual(cmd.parsed_args.tag, 'test')
-        self.assertIsInstance(cmd.backend, Kitsune)
+    def test_setup_cmd_parser(self):
+        """Test if it parser object is correctly initialized"""
 
-    def test_argument_parser(self):
-        """Test if it returns a argument parser object"""
+        parser = KitsuneCommand.setup_cmd_parser()
+        self.assertIsInstance(parser, BackendCommandArgumentParser)
 
-        parser = KitsuneCommand.create_argument_parser()
-        self.assertIsInstance(parser, argparse.ArgumentParser)
+        args = [KITSUNE_SERVER_URL,
+                '--tag', 'test',
+                '--no-cache',
+                '--offset', '88']
+
+        parsed_args = parser.parse(*args)
+        self.assertEqual(parsed_args.url, KITSUNE_SERVER_URL)
+        self.assertEqual(parsed_args.tag, 'test')
+        self.assertEqual(parsed_args.no_cache, True)
+        self.assertEqual(parsed_args.offset, 88)
 
 
 class TestKitsuneClient(unittest.TestCase):
