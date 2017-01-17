@@ -75,6 +75,6 @@ setup(name="perceval-mozilla",
       ],
       install_requires=[
         'requests>=2.7.0',
-        'perceval>0.4'
+        'perceval>=0.5'
       ],
       zip_safe=False)
