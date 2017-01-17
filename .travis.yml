@@ -10,8 +10,7 @@ before_install:
   - pip install httpretty==0.8.6
   - pip install coveralls
 
-install:
-  - ./setup.py install
+install: true
 
 script:
   - cd tests
