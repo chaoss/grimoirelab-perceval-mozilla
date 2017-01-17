@@ -31,9 +31,7 @@ from ...backend import (Backend,
                         BackendCommandArgumentParser,
                         metadata)
 from ...errors import CacheError, ParseError
-from ...utils import (DEFAULT_DATETIME,
-                      str_to_datetime,
-                      urljoin)
+from ...utils import str_to_datetime, urljoin
 
 
 logger = logging.getLogger(__name__)

@@ -22,7 +22,6 @@
 
 import json
 import logging
-import os.path
 
 import requests
 
