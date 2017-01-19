@@ -1,0 +1,17 @@
+# Releases
+
+## perceval-mozilla 0.1 - (2017-01-19)
+
+** New features and improvements: **
+
+* New set of backends added:
+   - Kitsune
+   - Mozilla Club
+   - ReMo
+* Backends updated to be compatible with Perceval 0.5, using the namespace
+  schema and the new implementation of `BackendCommand`.
+
+** Bugs fixed: **
+
+* Offset was not stored in ReMo cache. This caused errors when trying
+  to resume with items from the cache. (#1)
