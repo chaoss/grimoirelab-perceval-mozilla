@@ -39,8 +39,8 @@ try:
     import pypandoc
     long_description = pypandoc.convert(readme_md, 'rst')
 except (IOError, ImportError):
-    print("Warning: pypandoc module not found, or pandoc not installed. " \
-          + "Using md instead of rst")
+    print("Warning: pypandoc module not found, or pandoc not installed. " +
+          "Using md instead of rst")
     with codecs.open(readme_md, encoding='utf-8') as f:
         long_description = f.read()
 
@@ -57,23 +57,23 @@ setup(name="perceval-mozilla",
       author_email="sduenas@bitergia.com",
       license="GPLv3",
       classifiers=[
-        'Development Status :: 5 - Production/Stable',
-        'Intended Audience :: Developers',
-        'Topic :: Software Development',
-        'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
-        'Programming Language :: Python :: 3'
+          'Development Status :: 5 - Production/Stable',
+          'Intended Audience :: Developers',
+          'Topic :: Software Development',
+          'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
+          'Programming Language :: Python :: 3'
       ],
       keywords="development repositories analytics mozilla kitsune remo",
       packages=[
-        'perceval',
-        'perceval.backends',
-        'perceval.backends.mozilla'
+          'perceval',
+          'perceval.backends',
+          'perceval.backends.mozilla'
       ],
       namespaces=[
-        'perceval.backends'
+          'perceval.backends'
       ],
       install_requires=[
-        'requests>=2.7.0',
-        'perceval>=0.5'
+          'requests>=2.7.0',
+          'perceval>=0.5'
       ],
       zip_safe=False)
