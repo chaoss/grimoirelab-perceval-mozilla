@@ -307,5 +307,6 @@ class TestMozillaClubParser(unittest.TestCase):
         self.assertEqual(events[45]['Links to Photos (Optional)'], None)
         self.assertEqual(events[53]['updated'], '2016-12-13T15:44:04.821Z')
 
+
 if __name__ == "__main__":
     unittest.main(warnings='ignore')
