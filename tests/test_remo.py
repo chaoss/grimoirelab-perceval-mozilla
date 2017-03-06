@@ -43,8 +43,7 @@ pkg_resources.declare_namespace('perceval.backends')
 from perceval.backends.mozilla.remo import (ReMo,
                                             ReMoCommand,
                                             ReMoClient,
-                                            MOZILLA_REPS_URL,
-                                            REMO_DEFAULT_OFFSET)
+                                            MOZILLA_REPS_URL)
 
 
 MOZILLA_REPS_SERVER_URL = 'http://example.com'

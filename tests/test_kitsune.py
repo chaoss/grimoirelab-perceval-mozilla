@@ -35,7 +35,6 @@ import requests
 from perceval.backend import BackendCommandArgumentParser
 from perceval.cache import Cache
 from perceval.errors import CacheError
-from perceval.utils import str_to_datetime
 
 # Hack to make sure that tests import the right packages
 # due to setuptools behaviour
