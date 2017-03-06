@@ -103,7 +103,7 @@ class HTTPServer():
         httpretty.register_uri(httpretty.GET,
                                re.compile(MOZILLA_REPS_API + ".*"),
                                responses=[
-                                    httpretty.Response(body=request_callback)
+                                   httpretty.Response(body=request_callback)
                                ])
 
 
@@ -387,8 +387,8 @@ class TestReMoClient(unittest.TestCase):
         self.assertEqual(req.path, '/api/remo/v1/events/?page=1')
         # Check request params
         expected = {
-                    'page': ['1']
-                    }
+            'page': ['1']
+        }
         self.assertDictEqual(req.querystring, expected)
 
     @httpretty.activate
@@ -407,8 +407,8 @@ class TestReMoClient(unittest.TestCase):
         self.assertEqual(req.path, '/api/remo/v1/events/?page=1')
         # Check request params
         expected = {
-                    'page': ['1']
-                    }
+            'page': ['1']
+        }
         self.assertDictEqual(req.querystring, expected)
 
 

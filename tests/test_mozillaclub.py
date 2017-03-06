@@ -74,8 +74,8 @@ def configure_http_server():
     httpretty.register_uri(httpretty.GET,
                            MozillaClub_FEED_URL,
                            responses=[
-                                httpretty.Response(body=request_callback) \
-                                for _ in range(2)
+                               httpretty.Response(body=request_callback)
+                               for _ in range(2)
                            ])
 
     return http_requests

@@ -111,12 +111,12 @@ class HTTPServer():
         httpretty.register_uri(httpretty.GET,
                                KITSUNE_API_QUESTION,
                                responses=[
-                                    httpretty.Response(body=request_callback)
+                                   httpretty.Response(body=request_callback)
                                ])
         httpretty.register_uri(httpretty.GET,
                                KITSUNE_API_ANSWER,
                                responses=[
-                                    httpretty.Response(body=request_callback)
+                                   httpretty.Response(body=request_callback)
                                ])
 
 
@@ -355,9 +355,9 @@ class TestKitsuneClient(unittest.TestCase):
         self.assertRegex(req.path, '/api/2/question/')
         # Check request params
         expected = {
-                    'page': ['1'],
-                    'ordering': ['updated'],
-                    }
+            'page': ['1'],
+            'ordering': ['updated'],
+        }
         self.assertDictEqual(req.querystring, expected)
 
     @httpretty.activate
@@ -377,10 +377,10 @@ class TestKitsuneClient(unittest.TestCase):
         self.assertRegex(req.path, '/api/2/answer/')
         # Check request params
         expected = {
-                    'question': ['1129949'],
-                    'page': ['1'],
-                    'ordering': ['updated']
-                    }
+            'question': ['1129949'],
+            'page': ['1'],
+            'ordering': ['updated']
+        }
         self.assertDictEqual(req.querystring, expected)
 
 
