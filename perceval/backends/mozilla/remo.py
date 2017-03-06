@@ -110,7 +110,7 @@ class ReMo(Backend):
         # drop items from page before the offset
         drop_items = offset - page_offset
         logger.debug("%i items dropped to get %i offset starting in page %i (%i page offset)",
-                      drop_items, offset, page, page_offset)
+                     drop_items, offset, page, page_offset)
         current_offset = offset
 
         self._purge_cache_queue()

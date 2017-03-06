@@ -36,7 +36,8 @@ from ...utils import DEFAULT_DATETIME, str_to_datetime
 
 logger = logging.getLogger(__name__)
 
-MOZILLA_CLUB_URL = "https://spreadsheets.google.com/feeds/cells/1QHl2bjBhMslyFzR5XXPzMLdzzx7oeSKTbgR5PM8qp64/ohaibtm/public/values?alt=json"
+MOZILLA_CLUB_URL = \
+    "https://spreadsheets.google.com/feeds/cells/1QHl2bjBhMslyFzR5XXPzMLdzzx7oeSKTbgR5PM8qp64/ohaibtm/public/values?alt=json"
 
 EVENT_TEMPLATE = {
     1: "Status",
@@ -331,7 +332,7 @@ class MozillaClubParser:
             if ncol in EVENT_TEMPLATE:
                 if event_fields[ncol] != EVENT_TEMPLATE[ncol]:
                     logger.warning("Event template changed in spreadsheet %s vs %s",
-                                    name, EVENT_TEMPLATE[ncol])
+                                   name, EVENT_TEMPLATE[ncol])
             else:
                 logger.warning("Event template changed in spreadsheet. New column: %s", name)
 
