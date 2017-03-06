@@ -153,7 +153,7 @@ class Kitsune(Backend):
                     question['answers_data'] += answers
                 yield question
                 nquestions += 1
-                self._push_cache_queue('{}') # Mark with empty dict end of question
+                self._push_cache_queue('{}')  # Mark with empty dict end of question
 
             logger.debug("Questions: %i/%i", nquestions + offset, tquestions)
 
@@ -161,7 +161,6 @@ class Kitsune(Backend):
 
         logger.info("Total number of questions: %i (%i total)", nquestions, tquestions)
         logger.info("Questions with errors dropped: %i", equestions)
-
 
     @kitsune_metadata
     @metadata
@@ -175,7 +174,6 @@ class Kitsune(Backend):
         :raises CacheError: raised when an error occurs accessing the
             cache
         """
-
         def get_drop_questions(offset):
             page = int(offset / KitsuneClient.ITEMS_PER_PAGE)
             page_offset = page * KitsuneClient.ITEMS_PER_PAGE
@@ -195,7 +193,6 @@ class Kitsune(Backend):
                     answers_data += answers
 
             return answers_data
-
 
         if not self.cache:
             raise CacheError(cause="cache instance was not provided")
@@ -289,7 +286,7 @@ class KitsuneClient:
     :raises HTTPError: when an error occurs doing the request
     """
     FIRST_PAGE = 1  # Initial page in Kitsune
-    ITEMS_PER_PAGE = 20 # Items per page in Kitsune API
+    ITEMS_PER_PAGE = 20  # Items per page in Kitsune API
 
     def __init__(self, url):
         self.url = url
@@ -317,14 +314,14 @@ class KitsuneClient:
         if offset:
             page += int(offset / KitsuneClient.ITEMS_PER_PAGE)
 
-        next_uri = None # URI for the next questions query
+        next_uri = None  # URI for the next questions query
 
         while True:
             api_questions_url = urljoin(self.api_url, '/question') + '/'
 
             params = {
-                "page":page,
-                "ordering":"updated"
+                "page": page,
+                "ordering": "updated"
             }
 
             questions = self.call(api_questions_url, params)
@@ -345,8 +342,8 @@ class KitsuneClient:
             api_answers_url = urljoin(self.api_url, '/answer') + '/'
             params = {
                 "page": page,
-                "question":question_id,
-                "ordering":"updated"
+                "question": question_id,
+                "ordering": "updated"
             }
             answers_raw = self.call(api_answers_url, params)
             yield answers_raw
@@ -354,7 +351,7 @@ class KitsuneClient:
             answers = json.loads(answers_raw)
             if not answers['next']:
                 break
-            page = page+1
+            page += 1
 
 
 class KitsuneCommand(BackendCommand):
