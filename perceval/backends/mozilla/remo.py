@@ -110,7 +110,7 @@ class ReMo(Backend):
         # drop items from page before the offset
         drop_items = offset - page_offset
         logger.debug("%i items dropped to get %i offset starting in page %i (%i page offset)",
-                      drop_items, offset, page, page_offset)
+                     drop_items, offset, page, page_offset)
         current_offset = offset
 
         self._purge_cache_queue()
@@ -121,7 +121,8 @@ class ReMo(Backend):
             self._push_cache_queue(raw_items)
             items_data = json.loads(raw_items)
             titems = items_data['count']
-            logger.info("Pending items to retrieve: %i, %i current offset", titems-current_offset, current_offset)
+            logger.info("Pending items to retrieve: %i, %i current offset",
+                        titems - current_offset, current_offset)
             items = items_data['results']
             for item in items:
                 if drop_items > 0:
@@ -256,16 +257,16 @@ class ReMoClient:
     """
 
     FIRST_PAGE = 1  # Initial page in ReMo API
-    ITEMS_PER_PAGE = 20 # Items per page in ReMo API
+    ITEMS_PER_PAGE = 20  # Items per page in ReMo API
     API_PATH = '/api/remo/v1'
 
     def __init__(self, url):
         self.url = url
-        self.api_activities_url = urljoin(self.url, ReMoClient.API_PATH+'/activities/')
+        self.api_activities_url = urljoin(self.url, ReMoClient.API_PATH + '/activities/')
         self.api_activities_url += '/'  # API needs a final /
-        self.api_events_url = urljoin(self.url, ReMoClient.API_PATH+'/events/')
+        self.api_events_url = urljoin(self.url, ReMoClient.API_PATH + '/events/')
         self.api_events_url += '/'  # API needs a final /
-        self.api_users_url = urljoin(self.url, ReMoClient.API_PATH+'/users/')
+        self.api_users_url = urljoin(self.url, ReMoClient.API_PATH + '/users/')
         self.api_users_url += '/'  # API needs a final /
 
     def call(self, uri, params=None):
@@ -284,8 +285,8 @@ class ReMoClient:
     def get_items(self, category='events', offset=REMO_DEFAULT_OFFSET):
         """Retrieve all items for category using pagination """
 
-        more = True # There are more items to be processed
-        next_uri = None # URI for the next items page query
+        more = True  # There are more items to be processed
+        next_uri = None  # URI for the next items page query
         page = ReMoClient.FIRST_PAGE
         page += int(offset / ReMoClient.ITEMS_PER_PAGE)
 

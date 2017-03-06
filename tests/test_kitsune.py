@@ -35,7 +35,6 @@ import requests
 from perceval.backend import BackendCommandArgumentParser
 from perceval.cache import Cache
 from perceval.errors import CacheError
-from perceval.utils import str_to_datetime
 
 # Hack to make sure that tests import the right packages
 # due to setuptools behaviour
@@ -54,6 +53,7 @@ KITSUNE_API_ANSWER = KITSUNE_SERVER_URL + '/api/2/answer/'
 
 KITSUNE_SERVER_FAIL_PAGE = 69
 KITSUNE_ITEMS_PER_PAGE = 20
+
 
 def read_file(filename, mode='r'):
     with open(filename, mode) as f:
@@ -110,12 +110,12 @@ class HTTPServer():
         httpretty.register_uri(httpretty.GET,
                                KITSUNE_API_QUESTION,
                                responses=[
-                                    httpretty.Response(body=request_callback)
+                                   httpretty.Response(body=request_callback)
                                ])
         httpretty.register_uri(httpretty.GET,
                                KITSUNE_API_ANSWER,
                                responses=[
-                                    httpretty.Response(body=request_callback)
+                                   httpretty.Response(body=request_callback)
                                ])
 
 
@@ -218,7 +218,7 @@ class TestKitsuneBackend(unittest.TestCase):
         self.assertEqual(len(questions), 0)
 
         # Get no questions: we have two pages
-        offset = KitsuneClient.ITEMS_PER_PAGE*2
+        offset = KitsuneClient.ITEMS_PER_PAGE * 2
         with self.assertRaises(requests.exceptions.HTTPError):
             questions = [question for question in kitsune.fetch(offset=offset)]
             self.assertEqual(len(questions), 0)
@@ -279,7 +279,7 @@ class TestKitsuneBackendCache(unittest.TestCase):
         self.assertEqual(len(HTTPServer.requests_http), requests_done)
         # The contents should be the same
         self.assertEqual(len(cached_questions), len(questions))
-        for i in range(0,len(questions)):
+        for i in range(0, len(questions)):
             self.assertDictEqual(cached_questions[i]['data'], questions[i]['data'])
 
     def test_fetch_from_empty_cache(self):
@@ -347,16 +347,16 @@ class TestKitsuneClient(unittest.TestCase):
         # Set up a mock HTTP server
         body = read_file('data/kitsune/kitsune_questions_1_2.json')
         client = KitsuneClient(KITSUNE_SERVER_URL)
-        response = next(client.get_questions()) # first group of questions
+        response = next(client.get_questions())  # first group of questions
         req = HTTPServer.requests_http[-1]
         self.assertEqual(response, body)
         self.assertEqual(req.method, 'GET')
         self.assertRegex(req.path, '/api/2/question/')
         # Check request params
         expected = {
-                    'page' : ['1'],
-                    'ordering' : ['updated'],
-                    }
+            'page': ['1'],
+            'ordering': ['updated'],
+        }
         self.assertDictEqual(req.querystring, expected)
 
     @httpretty.activate
@@ -376,10 +376,10 @@ class TestKitsuneClient(unittest.TestCase):
         self.assertRegex(req.path, '/api/2/answer/')
         # Check request params
         expected = {
-                    'question': ['1129949'],
-                    'page' : ['1'],
-                    'ordering' : ['updated']
-                    }
+            'question': ['1129949'],
+            'page': ['1'],
+            'ordering': ['updated']
+        }
         self.assertDictEqual(req.querystring, expected)
 
 

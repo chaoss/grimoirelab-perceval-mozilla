@@ -43,14 +43,14 @@ pkg_resources.declare_namespace('perceval.backends')
 from perceval.backends.mozilla.remo import (ReMo,
                                             ReMoCommand,
                                             ReMoClient,
-                                            MOZILLA_REPS_URL,
-                                            REMO_DEFAULT_OFFSET)
+                                            MOZILLA_REPS_URL)
 
 
 MOZILLA_REPS_SERVER_URL = 'http://example.com'
 MOZILLA_REPS_API = MOZILLA_REPS_SERVER_URL + '/api/remo/v1'
 
 MOZILLA_REPS_CATEGORIES = ['events', 'activities', 'users']
+
 
 def read_file(filename, mode='r'):
     with open(filename, mode) as f:
@@ -70,14 +70,14 @@ class HTTPServer():
         for category in MOZILLA_REPS_CATEGORIES:
             mozilla_bodies[category] = {}
             # First two pages for each category to test pagination
-            mozilla_bodies[category]['1'] = read_file('data/remo/remo_'+category+'_page_1_2.json')
-            mozilla_bodies[category]['2'] = read_file('data/remo/remo_'+category+'_page_2_2.json')
+            mozilla_bodies[category]['1'] = read_file('data/remo/remo_' + category + '_page_1_2.json')
+            mozilla_bodies[category]['2'] = read_file('data/remo/remo_' + category + '_page_2_2.json')
             # A sample item per each category
-            mozilla_bodies[category]['item'] = read_file('data/remo/remo_'+category+'.json')
+            mozilla_bodies[category]['item'] = read_file('data/remo/remo_' + category + '.json')
 
         if empty:
             for category in MOZILLA_REPS_CATEGORIES:
-                mozilla_bodies[category]['1'] = read_file('data/remo/remo_'+category+'_page_empty.json')
+                mozilla_bodies[category]['1'] = read_file('data/remo/remo_' + category + '_page_empty.json')
 
         def request_callback(method, uri, headers):
             body = ''
@@ -100,9 +100,9 @@ class HTTPServer():
             return (200, headers, body)
 
         httpretty.register_uri(httpretty.GET,
-                               re.compile(MOZILLA_REPS_API+".*"),
+                               re.compile(MOZILLA_REPS_API + ".*"),
                                responses=[
-                                    httpretty.Response(body=request_callback)
+                                   httpretty.Response(body=request_callback)
                                ])
 
 
@@ -205,14 +205,14 @@ class TestReMoBackend(unittest.TestCase):
             self.__check_activities_contents(items)
 
         # Check requests: page list, items, page list, items
-        expected = [{'page':['1']}]
+        expected = [{'page': ['1']}]
         for i in range(0, items_page):
             expected += [{}]
-        expected += [{'page':['2']}]
+        expected += [{'page': ['2']}]
         for i in range(0, items_page):
             expected += [{}]
 
-        self.assertEqual(len(HTTPServer.requests_http)-prev_requests_http, len(expected))
+        self.assertEqual(len(HTTPServer.requests_http) - prev_requests_http, len(expected))
 
         for i in range(len(expected)):
             self.assertDictEqual(HTTPServer.requests_http[i].querystring, expected[i])
@@ -299,7 +299,7 @@ class TestReMoBackendCache(unittest.TestCase):
         self.assertEqual(len(HTTPServer.requests_http), requests_done)
         # The contents should be the same
         self.assertEqual(len(cached_items), len(items))
-        for i in range(0,len(items)):
+        for i in range(0, len(items)):
             self.assertDictEqual(cached_items[i]['data'], items[i]['data'])
             self.assertEqual(cached_items[i]['offset'], items[i]['offset'])
 
@@ -386,8 +386,8 @@ class TestReMoClient(unittest.TestCase):
         self.assertEqual(req.path, '/api/remo/v1/events/?page=1')
         # Check request params
         expected = {
-                    'page' : ['1']
-                    }
+            'page': ['1']
+        }
         self.assertDictEqual(req.querystring, expected)
 
     @httpretty.activate
@@ -399,15 +399,15 @@ class TestReMoClient(unittest.TestCase):
         # Set up a mock HTTP server
         body = read_file('data/remo/remo_events_page_1_2.json')
         client = ReMoClient(MOZILLA_REPS_SERVER_URL)
-        response = client.call(MOZILLA_REPS_API+'/events/?page=1')
+        response = client.call(MOZILLA_REPS_API + '/events/?page=1')
         req = HTTPServer.requests_http[-1]
         self.assertEqual(response, body)
         self.assertEqual(req.method, 'GET')
         self.assertEqual(req.path, '/api/remo/v1/events/?page=1')
         # Check request params
         expected = {
-                    'page' : ['1']
-                    }
+            'page': ['1']
+        }
         self.assertDictEqual(req.querystring, expected)
 
 

@@ -45,10 +45,12 @@ MozillaClub_FEED_URL = 'http://example.com/feed'
 
 requests_http = []
 
+
 def read_file(filename, mode='r'):
     with open(filename, mode) as f:
         content = f.read()
     return content
+
 
 def configure_http_server():
     bodies_events_job = read_file('data/mozillaclub/feed.json')
@@ -72,8 +74,8 @@ def configure_http_server():
     httpretty.register_uri(httpretty.GET,
                            MozillaClub_FEED_URL,
                            responses=[
-                                httpretty.Response(body=request_callback) \
-                                for _ in range(2)
+                               httpretty.Response(body=request_callback)
+                               for _ in range(2)
                            ])
 
     return http_requests
@@ -214,7 +216,7 @@ class TestMozillaClubBackendCache(unittest.TestCase):
         # any new request to the server
         cached_events = [event for event in mozillaclub.fetch_from_cache()]
         self.assertEqual(len(cached_events), len(events))
-        for i in range(0,len(events)):
+        for i in range(0, len(events)):
             self.assertDictEqual(cached_events[i]['data'], events[i]['data'])
         self.assertEqual(len(http_requests), 1)  # no more requests done
 
