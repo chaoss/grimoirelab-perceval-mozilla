@@ -26,13 +26,14 @@ import logging
 
 import requests
 
+from grimoirelab.toolkit.datetime import str_to_datetime
+from grimoirelab.toolkit.uris import urijoin
 
 from ...backend import (Backend,
                         BackendCommand,
                         BackendCommandArgumentParser,
                         metadata)
 from ...errors import CacheError
-from ...utils import str_to_datetime, urljoin
 
 
 logger = logging.getLogger(__name__)
@@ -262,11 +263,11 @@ class ReMoClient:
 
     def __init__(self, url):
         self.url = url
-        self.api_activities_url = urljoin(self.url, ReMoClient.API_PATH + '/activities/')
+        self.api_activities_url = urijoin(self.url, ReMoClient.API_PATH + '/activities/')
         self.api_activities_url += '/'  # API needs a final /
-        self.api_events_url = urljoin(self.url, ReMoClient.API_PATH + '/events/')
+        self.api_events_url = urijoin(self.url, ReMoClient.API_PATH + '/events/')
         self.api_events_url += '/'  # API needs a final /
-        self.api_users_url = urljoin(self.url, ReMoClient.API_PATH + '/users/')
+        self.api_users_url = urijoin(self.url, ReMoClient.API_PATH + '/users/')
         self.api_users_url += '/'  # API needs a final /
 
     def call(self, uri, params=None):

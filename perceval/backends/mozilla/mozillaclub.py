@@ -25,13 +25,14 @@ import logging
 
 import requests
 
+from grimoirelab.toolkit.datetime import str_to_datetime
+
 from ...backend import (Backend,
                         BackendCommand,
                         BackendCommandArgumentParser,
                         metadata)
 from ...errors import CacheError
-
-from ...utils import DEFAULT_DATETIME, str_to_datetime
+from ...utils import DEFAULT_DATETIME
 
 
 logger = logging.getLogger(__name__)

@@ -26,12 +26,14 @@ import logging
 
 import requests
 
+from grimoirelab.toolkit.datetime import str_to_datetime
+from grimoirelab.toolkit.uris import urijoin
+
 from ...backend import (Backend,
                         BackendCommand,
                         BackendCommandArgumentParser,
                         metadata)
 from ...errors import CacheError, ParseError
-from ...utils import str_to_datetime, urljoin
 
 
 logger = logging.getLogger(__name__)
@@ -290,7 +292,7 @@ class KitsuneClient:
 
     def __init__(self, url):
         self.url = url
-        self.api_url = urljoin(self.url, '/api/2/')
+        self.api_url = urijoin(self.url, '/api/2/')
 
     def call(self, api_url, params):
         """Run an API command.
@@ -317,7 +319,7 @@ class KitsuneClient:
         next_uri = None  # URI for the next questions query
 
         while True:
-            api_questions_url = urljoin(self.api_url, '/question') + '/'
+            api_questions_url = urijoin(self.api_url, '/question') + '/'
 
             params = {
                 "page": page,
@@ -339,7 +341,7 @@ class KitsuneClient:
         page = KitsuneClient.FIRST_PAGE
 
         while True:
-            api_answers_url = urljoin(self.api_url, '/answer') + '/'
+            api_answers_url = urijoin(self.api_url, '/answer') + '/'
             params = {
                 "page": page,
                 "question": question_id,

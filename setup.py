@@ -45,7 +45,7 @@ except (IOError, ImportError):
         long_description = f.read()
 
 
-version = '0.1.0'
+version = '0.1.1'
 
 
 setup(name="perceval-mozilla",
@@ -74,6 +74,7 @@ setup(name="perceval-mozilla",
       ],
       install_requires=[
           'requests>=2.7.0',
-          'perceval>=0.5'
+          'grimoirelab-toolkit>=0.1.0',
+          'perceval>=0.8'
       ],
       zip_safe=False)
