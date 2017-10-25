@@ -24,22 +24,15 @@
 
 import json
 import shutil
-import sys
 import tempfile
 import unittest
 
 import httpretty
-import pkg_resources
 import requests
 
 from perceval.backend import BackendCommandArgumentParser
 from perceval.cache import Cache
 from perceval.errors import CacheError
-
-# Hack to make sure that tests import the right packages
-# due to setuptools behaviour
-sys.path.insert(0, '..')
-pkg_resources.declare_namespace('perceval.backends')
 
 from perceval.backends.mozilla.kitsune import (Kitsune,
                                                KitsuneCommand,
