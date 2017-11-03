@@ -1,0 +1,12 @@
+{
+    "teams": [
+        {
+            "avatar": "https://avatars.githubusercontent.com/u/14631425?v=3",
+            "id": 51,
+            "kind": "team",
+            "login": "github:rust-lang-nursery:libs",
+            "name": "libs",
+            "url": "https://github.com/rust-lang-nursery"
+        }
+    ]
+}
