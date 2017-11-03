@@ -1,0 +1,59 @@
+{
+    "crates": [
+        {
+            "badges": [],
+            "categories": null,
+            "created_at": "2014-11-21T00:06:54.000682",
+            "description": null,
+            "documentation": null,
+            "downloads": 1142,
+            "exact_match": false,
+            "homepage": null,
+            "id": "a",
+            "keywords": null,
+            "links": {
+                "owner_team": "/api/v1/crates/a/owner_team",
+                "owner_user": "/api/v1/crates/a/owner_user",
+                "owners": "/api/v1/crates/a/owners",
+                "reverse_dependencies": "/api/v1/crates/a/reverse_dependencies",
+                "version_downloads": "/api/v1/crates/a/downloads",
+                "versions": "/api/v1/crates/a/versions"
+            },
+            "max_version": "0.0.1",
+            "name": "a",
+            "recent_downloads": 39,
+            "repository": null,
+            "updated_at": "2015-12-11T23:56:40.231265",
+            "versions": null
+        },
+        {
+            "badges": [],
+            "categories": null,
+            "created_at": "2017-08-17T19:44:15.787189",
+            "description": "rust 2d axis aligned bounding box functions",
+            "documentation": null,
+            "downloads": 56,
+            "exact_match": false,
+            "homepage": "https://gitlab.com/nathanfaucett/rs-aabb2",
+            "id": "aabb2",
+            "keywords": null,
+            "links": {
+                "owner_team": "/api/v1/crates/aabb2/owner_team",
+                "owner_user": "/api/v1/crates/aabb2/owner_user",
+                "owners": "/api/v1/crates/aabb2/owners",
+                "reverse_dependencies": "/api/v1/crates/aabb2/reverse_dependencies",
+                "version_downloads": "/api/v1/crates/aabb2/downloads",
+                "versions": "/api/v1/crates/aabb2/versions"
+            },
+            "max_version": "0.1.1",
+            "name": "aabb2",
+            "recent_downloads": 56,
+            "repository": "https://gitlab.com/nathanfaucett/rs-aabb2.git",
+            "updated_at": "2017-08-21T14:09:02.995496",
+            "versions": null
+        }
+    ],
+    "meta": {
+        "total": 4
+    }
+}

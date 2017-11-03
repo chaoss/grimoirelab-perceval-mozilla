@@ -1,0 +1,12 @@
+{
+    "users": [
+            {
+                "avatar": "https://avatars.githubusercontent.com/u/4705807?v=3",
+                "id": 205,
+                "kind": "user",
+                "login": "augustt198",
+                "name": "August",
+                "url": "https://github.com/augustt198"
+            }
+        ]
+}

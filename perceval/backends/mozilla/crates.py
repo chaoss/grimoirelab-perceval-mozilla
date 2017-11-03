@@ -24,7 +24,6 @@ import json
 import logging
 import requests
 import time
-from itertools import chain
 
 from grimoirelab.toolkit.datetime import (datetime_utcnow,
                                           datetime_to_utc,
@@ -115,7 +114,6 @@ class Crates(Backend):
             return str(ts.timestamp())
         else:
             return str(item['id'])
-
 
     @staticmethod
     def metadata_updated_on(item):

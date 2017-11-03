@@ -1,0 +1,52 @@
+{
+    "categories": [],
+    "crate": {
+        "badges": [],
+        "categories": [],
+        "created_at": "2014-11-21T00:06:54.000682",
+        "description": null,
+        "documentation": null,
+        "downloads": 1143,
+        "exact_match": false,
+        "homepage": null,
+        "id": "a",
+        "keywords": [],
+        "links": {
+            "owner_team": "/api/v1/crates/a/owner_team",
+            "owner_user": "/api/v1/crates/a/owner_user",
+            "owners": "/api/v1/crates/a/owners",
+            "reverse_dependencies": "/api/v1/crates/a/reverse_dependencies",
+            "version_downloads": "/api/v1/crates/a/downloads",
+            "versions": null
+        },
+        "max_version": "0.0.1",
+        "name": "a",
+        "recent_downloads": 39,
+        "repository": null,
+        "updated_at": "2015-12-11T23:56:40.231265",
+        "versions": [
+            259
+        ]
+    },
+    "keywords": [],
+    "versions": [
+        {
+            "crate": "a",
+            "created_at": "2014-11-21T00:06:54.027559",
+            "dl_path": "/api/v1/crates/a/0.0.1/download",
+            "downloads": 1143,
+            "features": {},
+            "id": 259,
+            "license": null,
+            "links": {
+                "authors": "/api/v1/crates/a/0.0.1/authors",
+                "dependencies": "/api/v1/crates/a/0.0.1/dependencies",
+                "version_downloads": "/api/v1/crates/a/0.0.1/downloads"
+            },
+            "num": "0.0.1",
+            "readme_path": "/api/v1/crates/a/0.0.1/readme",
+            "updated_at": "2017-10-09T18:59:00.134609",
+            "yanked": false
+        }
+    ]
+}
