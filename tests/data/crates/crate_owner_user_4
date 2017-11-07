@@ -1,0 +1,28 @@
+{
+    "users": [
+        {
+            "avatar": "https://avatars1.githubusercontent.com/u/64996?v=4",
+            "id": 1,
+            "kind": "user",
+            "login": "alexcrichton",
+            "name": "Alex Crichton",
+            "url": "https://github.com/alexcrichton"
+        },
+        {
+            "avatar": "https://avatars1.githubusercontent.com/u/1203825?v=4",
+            "id": 3,
+            "kind": "user",
+            "login": "huonw",
+            "name": "Huon Wilson",
+            "url": "https://github.com/huonw"
+        },
+        {
+            "avatar": "https://avatars0.githubusercontent.com/u/1455697?v=4",
+            "id": 5,
+            "kind": "user",
+            "login": "sfackler",
+            "name": "Steven Fackler",
+            "url": "https://github.com/sfackler"
+        }
+    ]
+}

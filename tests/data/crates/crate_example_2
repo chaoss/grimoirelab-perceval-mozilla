@@ -1,0 +1,80 @@
+{
+    "categories": [],
+    "crate": {
+        "badges": [],
+        "categories": [],
+        "created_at": "2017-08-17T19:44:15.787189",
+        "description": "rust 2d axis aligned bounding box functions",
+        "documentation": null,
+        "downloads": 56,
+        "exact_match": false,
+        "homepage": "https://gitlab.com/nathanfaucett/rs-aabb2",
+        "id": "aabb2",
+        "keywords": [
+            "aabb2"
+        ],
+        "links": {
+            "owner_team": "/api/v1/crates/aabb2/owner_team",
+            "owner_user": "/api/v1/crates/aabb2/owner_user",
+            "owners": "/api/v1/crates/aabb2/owners",
+            "reverse_dependencies": "/api/v1/crates/aabb2/reverse_dependencies",
+            "version_downloads": "/api/v1/crates/aabb2/downloads",
+            "versions": null
+        },
+        "max_version": "0.1.1",
+        "name": "aabb2",
+        "recent_downloads": 56,
+        "repository": "https://gitlab.com/nathanfaucett/rs-aabb2.git",
+        "updated_at": "2017-08-21T14:09:02.995496",
+        "versions": [
+            63050,
+            62659
+        ]
+    },
+    "keywords": [
+        {
+            "crates_cnt": 1,
+            "created_at": "2017-08-17T19:44:15.787189",
+            "id": "aabb2",
+            "keyword": "aabb2"
+        }
+    ],
+    "versions": [
+        {
+            "crate": "aabb2",
+            "created_at": "2017-08-21T14:09:02.995496",
+            "dl_path": "/api/v1/crates/aabb2/0.1.1/download",
+            "downloads": 34,
+            "features": {},
+            "id": 63050,
+            "license": "MIT",
+            "links": {
+                "authors": "/api/v1/crates/aabb2/0.1.1/authors",
+                "dependencies": "/api/v1/crates/aabb2/0.1.1/dependencies",
+                "version_downloads": "/api/v1/crates/aabb2/0.1.1/downloads"
+            },
+            "num": "0.1.1",
+            "readme_path": "/api/v1/crates/aabb2/0.1.1/readme",
+            "updated_at": "2017-10-09T18:59:00.134609",
+            "yanked": false
+        },
+        {
+            "crate": "aabb2",
+            "created_at": "2017-08-17T19:44:15.787189",
+            "dl_path": "/api/v1/crates/aabb2/0.1.0/download",
+            "downloads": 22,
+            "features": {},
+            "id": 62659,
+            "license": "MIT",
+            "links": {
+                "authors": "/api/v1/crates/aabb2/0.1.0/authors",
+                "dependencies": "/api/v1/crates/aabb2/0.1.0/dependencies",
+                "version_downloads": "/api/v1/crates/aabb2/0.1.0/downloads"
+            },
+            "num": "0.1.0",
+            "readme_path": "/api/v1/crates/aabb2/0.1.0/readme",
+            "updated_at": "2017-10-09T18:59:00.134609",
+            "yanked": false
+        }
+    ]
+}

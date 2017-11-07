@@ -1,0 +1,12 @@
+{
+    "teams": [
+        {
+            "avatar": "https://avatars.githubusercontent.com/u/11965399?v=3",
+            "id": 30,
+            "kind": "team",
+            "login": "github:serde-rs:owners",
+            "name": "owners",
+            "url": "https://github.com/serde-rs"
+        }
+    ]
+}

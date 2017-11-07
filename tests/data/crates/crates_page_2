@@ -1,0 +1,59 @@
+{
+    "crates": [
+        {
+            "badges": [],
+            "categories": null,
+            "created_at": "2017-09-19T03:31:00.306621",
+            "description": "RESERVED. Open for adoption by projects that fulfill some criteria. Please see the linked gist for details.",
+            "documentation": null,
+            "downloads": 15,
+            "exact_match": false,
+            "homepage": "https://gist.github.com/est31/da97a67dd7356e1dae5c0dd34b5a342c",
+            "id": "aac",
+            "keywords": null,
+            "links": {
+                "owner_team": "/api/v1/crates/aac/owner_team",
+                "owner_user": "/api/v1/crates/aac/owner_user",
+                "owners": "/api/v1/crates/aac/owners",
+                "reverse_dependencies": "/api/v1/crates/aac/reverse_dependencies",
+                "version_downloads": "/api/v1/crates/aac/downloads",
+                "versions": "/api/v1/crates/aac/versions"
+            },
+            "max_version": "0.0.0",
+            "name": "aac",
+            "recent_downloads": 15,
+            "repository": null,
+            "updated_at": "2017-09-19T03:31:00.306621",
+            "versions": null
+        },
+        {
+            "badges": [],
+            "categories": null,
+            "created_at": "2016-03-23T05:50:04.222947",
+            "description": "An implementation of Karaboga's Artificial Bee Colony algorithm.",
+            "documentation": "https://daviddonna.github.io/abc-rs",
+            "downloads": 1471,
+            "exact_match": false,
+            "homepage": null,
+            "id": "abc",
+            "keywords": null,
+            "links": {
+                "owner_team": "/api/v1/crates/abc/owner_team",
+                "owner_user": "/api/v1/crates/abc/owner_user",
+                "owners": "/api/v1/crates/abc/owners",
+                "reverse_dependencies": "/api/v1/crates/abc/reverse_dependencies",
+                "version_downloads": "/api/v1/crates/abc/downloads",
+                "versions": "/api/v1/crates/abc/versions"
+            },
+            "max_version": "0.2.3",
+            "name": "abc",
+            "recent_downloads": 82,
+            "repository": "https://github.com/daviddonna/abc-rs",
+            "updated_at": "2016-05-03T01:01:54.483453",
+            "versions": null
+        }
+    ],
+    "meta": {
+        "total": 4
+    }
+}

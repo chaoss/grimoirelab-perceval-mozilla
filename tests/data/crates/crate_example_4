@@ -1,0 +1,182 @@
+{
+    "categories": [],
+    "crate": {
+        "badges": [],
+        "categories": [],
+        "created_at": "2016-03-23T05:50:04.222947",
+        "description": "An implementation of Karaboga's Artificial Bee Colony algorithm.",
+        "documentation": "https://daviddonna.github.io/abc-rs",
+        "downloads": 1472,
+        "exact_match": false,
+        "homepage": null,
+        "id": "abc",
+        "keywords": [
+            "ai",
+            "optimization"
+        ],
+        "links": {
+            "owner_team": "/api/v1/crates/abc/owner_team",
+            "owner_user": "/api/v1/crates/abc/owner_user",
+            "owners": "/api/v1/crates/abc/owners",
+            "reverse_dependencies": "/api/v1/crates/abc/reverse_dependencies",
+            "version_downloads": "/api/v1/crates/abc/downloads",
+            "versions": null
+        },
+        "max_version": "0.2.3",
+        "name": "abc",
+        "recent_downloads": 83,
+        "repository": "https://github.com/daviddonna/abc-rs",
+        "updated_at": "2016-05-03T01:01:54.483453",
+        "versions": [
+            26495,
+            24810,
+            24648,
+            24578,
+            24479,
+            24436,
+            24339
+        ]
+    },
+    "keywords": [
+        {
+            "crates_cnt": 14,
+            "created_at": "2014-12-13T14:49:44.995453",
+            "id": "ai",
+            "keyword": "ai"
+        },
+        {
+            "crates_cnt": 12,
+            "created_at": "2015-06-27T20:02:11.628349",
+            "id": "optimization",
+            "keyword": "optimization"
+        }
+    ],
+    "versions": [
+        {
+            "crate": "abc",
+            "created_at": "2016-05-03T01:01:54.483453",
+            "dl_path": "/api/v1/crates/abc/0.2.3/download",
+            "downloads": 612,
+            "features": {},
+            "id": 26495,
+            "license": "MIT",
+            "links": {
+                "authors": "/api/v1/crates/abc/0.2.3/authors",
+                "dependencies": "/api/v1/crates/abc/0.2.3/dependencies",
+                "version_downloads": "/api/v1/crates/abc/0.2.3/downloads"
+            },
+            "num": "0.2.3",
+            "readme_path": "/api/v1/crates/abc/0.2.3/readme",
+            "updated_at": "2017-10-09T18:59:00.134609",
+            "yanked": false
+        },
+        {
+            "crate": "abc",
+            "created_at": "2016-03-31T13:50:53.757831",
+            "dl_path": "/api/v1/crates/abc/0.2.2/download",
+            "downloads": 175,
+            "features": {},
+            "id": 24810,
+            "license": "MIT",
+            "links": {
+                "authors": "/api/v1/crates/abc/0.2.2/authors",
+                "dependencies": "/api/v1/crates/abc/0.2.2/dependencies",
+                "version_downloads": "/api/v1/crates/abc/0.2.2/downloads"
+            },
+            "num": "0.2.2",
+            "readme_path": "/api/v1/crates/abc/0.2.2/readme",
+            "updated_at": "2017-10-09T18:59:00.134609",
+            "yanked": false
+        },
+        {
+            "crate": "abc",
+            "created_at": "2016-03-29T01:46:14.966178",
+            "dl_path": "/api/v1/crates/abc/0.2.1/download",
+            "downloads": 140,
+            "features": {},
+            "id": 24648,
+            "license": "MIT",
+            "links": {
+                "authors": "/api/v1/crates/abc/0.2.1/authors",
+                "dependencies": "/api/v1/crates/abc/0.2.1/dependencies",
+                "version_downloads": "/api/v1/crates/abc/0.2.1/downloads"
+            },
+            "num": "0.2.1",
+            "readme_path": "/api/v1/crates/abc/0.2.1/readme",
+            "updated_at": "2017-10-09T18:59:00.134609",
+            "yanked": false
+        },
+        {
+            "crate": "abc",
+            "created_at": "2016-03-28T03:52:47.446229",
+            "dl_path": "/api/v1/crates/abc/0.2.0/download",
+            "downloads": 140,
+            "features": {},
+            "id": 24578,
+            "license": "MIT",
+            "links": {
+                "authors": "/api/v1/crates/abc/0.2.0/authors",
+                "dependencies": "/api/v1/crates/abc/0.2.0/dependencies",
+                "version_downloads": "/api/v1/crates/abc/0.2.0/downloads"
+            },
+            "num": "0.2.0",
+            "readme_path": "/api/v1/crates/abc/0.2.0/readme",
+            "updated_at": "2017-10-09T18:59:00.134609",
+            "yanked": false
+        },
+        {
+            "crate": "abc",
+            "created_at": "2016-03-25T20:25:53.071259",
+            "dl_path": "/api/v1/crates/abc/0.1.2/download",
+            "downloads": 136,
+            "features": {},
+            "id": 24479,
+            "license": "MIT",
+            "links": {
+                "authors": "/api/v1/crates/abc/0.1.2/authors",
+                "dependencies": "/api/v1/crates/abc/0.1.2/dependencies",
+                "version_downloads": "/api/v1/crates/abc/0.1.2/downloads"
+            },
+            "num": "0.1.2",
+            "readme_path": "/api/v1/crates/abc/0.1.2/readme",
+            "updated_at": "2017-10-09T18:59:00.134609",
+            "yanked": false
+        },
+        {
+            "crate": "abc",
+            "created_at": "2016-03-25T01:37:34.915076",
+            "dl_path": "/api/v1/crates/abc/0.1.1/download",
+            "downloads": 133,
+            "features": {},
+            "id": 24436,
+            "license": "MIT",
+            "links": {
+                "authors": "/api/v1/crates/abc/0.1.1/authors",
+                "dependencies": "/api/v1/crates/abc/0.1.1/dependencies",
+                "version_downloads": "/api/v1/crates/abc/0.1.1/downloads"
+            },
+            "num": "0.1.1",
+            "readme_path": "/api/v1/crates/abc/0.1.1/readme",
+            "updated_at": "2017-10-09T18:59:00.134609",
+            "yanked": false
+        },
+        {
+            "crate": "abc",
+            "created_at": "2016-03-23T05:50:04.222947",
+            "dl_path": "/api/v1/crates/abc/0.1.0/download",
+            "downloads": 136,
+            "features": {},
+            "id": 24339,
+            "license": "MIT",
+            "links": {
+                "authors": "/api/v1/crates/abc/0.1.0/authors",
+                "dependencies": "/api/v1/crates/abc/0.1.0/dependencies",
+                "version_downloads": "/api/v1/crates/abc/0.1.0/downloads"
+            },
+            "num": "0.1.0",
+            "readme_path": "/api/v1/crates/abc/0.1.0/readme",
+            "updated_at": "2017-10-09T18:59:00.134609",
+            "yanked": false
+        }
+    ]
+}
