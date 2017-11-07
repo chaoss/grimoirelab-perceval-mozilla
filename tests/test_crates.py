@@ -167,7 +167,7 @@ class TestCratesBackend(unittest.TestCase):
     def test_has_resuming(self):
         """Test if it returns True when has_resuming is called"""
 
-        self.assertEqual(Crates.has_resuming(), True)
+        self.assertEqual(Crates.has_resuming(), False)
 
     @httpretty.activate
     def test_fetch_crates(self):

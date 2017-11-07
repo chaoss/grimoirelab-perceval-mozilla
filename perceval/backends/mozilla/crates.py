@@ -34,7 +34,6 @@ from ...backend import (Backend,
                         BackendCommand,
                         BackendCommandArgumentParser,
                         metadata)
-from ...errors import CacheError
 from ...utils import DEFAULT_DATETIME
 
 
@@ -52,41 +51,33 @@ class Crates(Backend):
     This class allows the fetch the packages stored in Crates.io
 
     :param sleep_time: sleep time in case of connection lost
+    :param tag: label used to mark the data
+    :param cache: use issues already retrieved in cache
     """
     version = '0.1.0'
 
     def __init__(self, sleep_time=SLEEP_TIME, tag=None, cache=None):
-
         origin = CRATES_URL
 
         super().__init__(origin, tag=tag, cache=cache)
         self.client = CratesClient(sleep_time=sleep_time)
 
     @metadata
-    def fetch(self, category="crates", from_date=DEFAULT_DATETIME):
+    def fetch(self, from_date=DEFAULT_DATETIME, category="crates"):
         """Fetch package data.
 
         The method retrieves packages and summary from Crates.io.
 
         :param from_date: obtain packages updated since this date
+        :param category: select the category to fetch (crates or summary)
 
         :returns: a summary and crate items
         """
 
-        if category == "summary":
-            return self.__fetch_summary()
-        else:
+        if category == "crates":
             return self.__fetch_crates(from_date)
-
-    @metadata
-    def fetch_from_cache(self):
-        """Fetch Crates.io data from the cache.
-
-        It raises an error since this method is not used by the Crates.io backend
-
-        :raises CacheError
-        """
-        raise CacheError(cause="fetch_from_cache method is not implemented")
+        else:
+            return self.__fetch_summary()
 
     @classmethod
     def has_caching(cls):
@@ -102,13 +93,13 @@ class Crates(Backend):
 
         :returns: this backend supports items resuming
         """
-        return True
+        return False
 
     @staticmethod
     def metadata_id(item):
         """Extracts the identifier from an item depending on its type."""
 
-        if 'num_downloads' in item:
+        if Crates.metadata_category(item) == 'summary':
             ts = item['fetched_on']
             ts = str_to_datetime(ts)
             return str(ts.timestamp())
@@ -117,7 +108,7 @@ class Crates(Backend):
 
     @staticmethod
     def metadata_updated_on(item):
-        """Extracts the update time from a Launchpad item.
+        """Extracts the update time from an item.
 
         The timestamp used is extracted from 'date_last_updated' field.
         This date is converted to UNIX timestamp format. As Launchpad
@@ -128,7 +119,7 @@ class Crates(Backend):
 
         :returns: a UNIX timestamp
         """
-        if 'num_downloads' in item:
+        if Crates.metadata_category(item) == 'summary':
             ts = item['fetched_on']
         else:
             ts = item['updated_at']
@@ -139,7 +130,7 @@ class Crates(Backend):
 
     @staticmethod
     def metadata_category(item):
-        """Extracts the category from a Crates item.
+        """Extracts the category from an item.
 
         This backend generates two types of item: 'summary' and 'crate'.
         """
