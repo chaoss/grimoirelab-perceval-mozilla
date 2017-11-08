@@ -29,7 +29,9 @@ import unittest
 from perceval.backend import BackendCommandArgumentParser
 from perceval.backends.mozilla.crates import (Crates,
                                               CratesClient,
-                                              CratesCommand)
+                                              CratesCommand,
+                                              CRATES_CATEGORY,
+                                              SUMMARY_CATEGORY)
 
 from perceval.utils import DEFAULT_DATETIME
 
@@ -179,14 +181,26 @@ class TestCratesBackend(unittest.TestCase):
         items = [items for items in backend.fetch()]
 
         self.assertEqual(len(items), 4)
-        self.assertEqual(len(items[0]['data']['owner_team_data']['teams']), 0)
-        self.assertEqual(len(items[0]['data']['owner_user_data']['users']), 1)
-        self.assertEqual(len(items[1]['data']['owner_team_data']['teams']), 1)
-        self.assertEqual(len(items[1]['data']['owner_user_data']['users']), 2)
-        self.assertEqual(len(items[2]['data']['owner_team_data']['teams']), 1)
-        self.assertEqual(len(items[2]['data']['owner_user_data']['users']), 2)
-        self.assertEqual(len(items[3]['data']['owner_team_data']['teams']), 1)
-        self.assertEqual(len(items[3]['data']['owner_user_data']['users']), 3)
+
+        item = items[0]
+        self.assertEqual(item['category'], CRATES_CATEGORY)
+        self.assertEqual(len(item['data']['owner_team_data']['teams']), 0)
+        self.assertEqual(len(item['data']['owner_user_data']['users']), 1)
+
+        item = items[1]
+        self.assertEqual(item['category'], CRATES_CATEGORY)
+        self.assertEqual(len(item['data']['owner_team_data']['teams']), 1)
+        self.assertEqual(len(item['data']['owner_user_data']['users']), 2)
+
+        item = items[2]
+        self.assertEqual(item['category'], CRATES_CATEGORY)
+        self.assertEqual(len(item['data']['owner_team_data']['teams']), 1)
+        self.assertEqual(len(item['data']['owner_user_data']['users']), 2)
+
+        item = items[3]
+        self.assertEqual(item['category'], CRATES_CATEGORY)
+        self.assertEqual(len(item['data']['owner_team_data']['teams']), 1)
+        self.assertEqual(len(item['data']['owner_user_data']['users']), 3)
 
     @httpretty.activate
     def test_fetch_summary(self):
@@ -195,10 +209,10 @@ class TestCratesBackend(unittest.TestCase):
         setup_http_server()
 
         backend = Crates()
-        items = [items for items in backend.fetch(category="summary")]
+        items = [items for items in backend.fetch(category=SUMMARY_CATEGORY)]
 
         self.assertEqual(len(items), 1)
-        self.assertEqual(items[0]['category'], "summary")
+        self.assertEqual(items[0]['category'], SUMMARY_CATEGORY)
         self.assertEqual(items[0]['data']['num_crates'], 10000)
         self.assertEqual(items[0]['data']['num_downloads'], 2000000000)
 
@@ -228,10 +242,11 @@ class TestCratesBackend(unittest.TestCase):
 
         backend = Crates()
         from_date = datetime.datetime(2016, 1, 1)
-        items = [items for items in backend.fetch(category='summary', from_date=from_date)]
+        items = [items for items in backend.fetch(category=SUMMARY_CATEGORY,
+                                                  from_date=from_date)]
 
         self.assertEqual(len(items), 1)
-        self.assertEqual(items[0]['category'], "summary")
+        self.assertEqual(items[0]['category'], SUMMARY_CATEGORY)
         self.assertEqual(items[0]['data']['num_crates'], 10000)
         self.assertEqual(items[0]['data']['num_downloads'], 2000000000)
 
