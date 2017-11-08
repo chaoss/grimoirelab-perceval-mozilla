@@ -6,6 +6,7 @@ Bundle of Perceval backends for Mozilla ecosystem.
 
 The backends currently managed by this package support the next repositories:
 
+* Crates
 * Kitsune
 * MozillaClub
 * ReMo
@@ -34,6 +35,12 @@ $ python3 setup.py install
 ```
 
 ## Examples
+
+### Crates
+
+```
+$ perceval crates
+```
 
 ### Kitsune
 
