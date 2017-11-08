@@ -333,5 +333,8 @@ class CratesCommand(BackendCommand):
         group = parser.parser.add_argument_group('Crates.io arguments')
         group.add_argument('--sleep-time', dest='sleep_time',
                            help="Sleep time in case of connection lost")
+        group.add_argument('--category', default=CRATES_CATEGORY,
+                           choices=(CRATES_CATEGORY, SUMMARY_CATEGORY),
+                           help="category of items to fecth")
 
         return parser

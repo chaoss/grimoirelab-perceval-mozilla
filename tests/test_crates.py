@@ -323,11 +323,13 @@ class TestCratesCommand(unittest.TestCase):
 
         args = ['--tag', 'test',
                 '--from-date', '1970-01-01',
+                '--category', 'summary',
                 '--sleep-time', '600']
 
         parsed_args = parser.parse(*args)
         self.assertEqual(parsed_args.tag, 'test')
         self.assertEqual(parsed_args.from_date, DEFAULT_DATETIME)
+        self.assertEqual(parsed_args.category, SUMMARY_CATEGORY)
         self.assertEqual(parsed_args.sleep_time, '600')
 
 
