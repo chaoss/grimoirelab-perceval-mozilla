@@ -22,9 +22,10 @@
 #
 
 import datetime
-import httpretty
 import json
 import unittest
+
+import httpretty
 
 from perceval.backend import BackendCommandArgumentParser
 from perceval.backends.mozilla.crates import (Crates,
@@ -34,7 +35,6 @@ from perceval.backends.mozilla.crates import (Crates,
                                               SUMMARY_CATEGORY)
 
 from perceval.utils import DEFAULT_DATETIME
-
 
 CRATES_API_URL = "https://crates.io/api/v1/"
 
@@ -139,6 +139,28 @@ def setup_http_server(empty=False):
                                body=crate_team_4,
                                status=200)
 
+        crate_version_downloads_1 = read_file('data/crates/crate_version_downloads_1')
+        crate_version_downloads_2 = read_file('data/crates/crate_version_downloads_empty')
+        crate_version_downloads_3 = read_file('data/crates/crate_version_downloads_empty')
+        crate_version_downloads_4 = read_file('data/crates/crate_version_downloads_empty')
+
+        httpretty.register_uri(httpretty.GET,
+                               CRATES_API_URL + 'crates/a/downloads',
+                               body=crate_version_downloads_1,
+                               status=200)
+        httpretty.register_uri(httpretty.GET,
+                               CRATES_API_URL + 'crates/aabb2/downloads',
+                               body=crate_version_downloads_2,
+                               status=200)
+        httpretty.register_uri(httpretty.GET,
+                               CRATES_API_URL + 'crates/aac/downloads',
+                               body=crate_version_downloads_3,
+                               status=200)
+        httpretty.register_uri(httpretty.GET,
+                               CRATES_API_URL + 'crates/abc/downloads',
+                               body=crate_version_downloads_4,
+                               status=200)
+
 
 class TestCratesBackend(unittest.TestCase):
     """Crates.io backend tests"""
@@ -186,21 +208,25 @@ class TestCratesBackend(unittest.TestCase):
         self.assertEqual(item['category'], CRATES_CATEGORY)
         self.assertEqual(len(item['data']['owner_team_data']['teams']), 0)
         self.assertEqual(len(item['data']['owner_user_data']['users']), 1)
+        self.assertEqual(len(item['data']['version_downloads_data']['version_downloads']), 2)
 
         item = items[1]
         self.assertEqual(item['category'], CRATES_CATEGORY)
         self.assertEqual(len(item['data']['owner_team_data']['teams']), 1)
         self.assertEqual(len(item['data']['owner_user_data']['users']), 2)
+        self.assertEqual(len(item['data']['version_downloads_data']), 0)
 
         item = items[2]
         self.assertEqual(item['category'], CRATES_CATEGORY)
         self.assertEqual(len(item['data']['owner_team_data']['teams']), 1)
         self.assertEqual(len(item['data']['owner_user_data']['users']), 2)
+        self.assertEqual(len(item['data']['version_downloads_data']), 0)
 
         item = items[3]
         self.assertEqual(item['category'], CRATES_CATEGORY)
         self.assertEqual(len(item['data']['owner_team_data']['teams']), 1)
         self.assertEqual(len(item['data']['owner_user_data']['users']), 3)
+        self.assertEqual(len(item['data']['version_downloads_data']), 0)
 
     @httpretty.activate
     def test_fetch_summary(self):
@@ -229,10 +255,13 @@ class TestCratesBackend(unittest.TestCase):
         self.assertEqual(len(items), 3)
         self.assertEqual(len(items[0]['data']['owner_team_data']['teams']), 1)
         self.assertEqual(len(items[0]['data']['owner_user_data']['users']), 2)
+        self.assertEqual(len(items[0]['data']['version_downloads_data']), 0)
         self.assertEqual(len(items[1]['data']['owner_team_data']['teams']), 1)
         self.assertEqual(len(items[1]['data']['owner_user_data']['users']), 2)
+        self.assertEqual(len(items[1]['data']['version_downloads_data']), 0)
         self.assertEqual(len(items[2]['data']['owner_team_data']['teams']), 1)
         self.assertEqual(len(items[2]['data']['owner_user_data']['users']), 3)
+        self.assertEqual(len(items[2]['data']['version_downloads_data']), 0)
 
     @httpretty.activate
     def test_fetch_summary_from_date(self):
