@@ -22,8 +22,9 @@
 
 import json
 import logging
-import requests
 import time
+
+import requests
 
 from grimoirelab.toolkit.datetime import (datetime_utcnow,
                                           datetime_to_utc,
@@ -35,7 +36,6 @@ from ...backend import (Backend,
                         BackendCommandArgumentParser,
                         metadata)
 from ...utils import DEFAULT_DATETIME
-
 
 CRATES_URL = "https://crates.io/"
 CRATES_API_URL = 'https://crates.io/api/v1/'
@@ -57,10 +57,11 @@ class Crates(Backend):
     :param tag: label used to mark the data
     :param cache: use issues already retrieved in cache
     """
-    version = '0.1.1'
+    version = '0.1.2'
 
     def __init__(self, sleep_time=SLEEP_TIME, tag=None, cache=None):
         origin = CRATES_URL
+
         super().__init__(origin, tag=tag, cache=cache)
         self.client = CratesClient(sleep_time=sleep_time)
 
@@ -170,6 +171,7 @@ class Crates(Backend):
                 crate = self.__fetch_crate_data(crate_id)
                 crate['owner_team_data'] = self.__fetch_crate_owner_team(crate_id)
                 crate['owner_user_data'] = self.__fetch_crate_owner_user(crate_id)
+                crate['version_downloads_data'] = self.__fetch_crate_version_downloads(crate_id)
 
                 yield crate
 
@@ -190,6 +192,15 @@ class Crates(Backend):
         owner_user = json.loads(raw_owner_user)
 
         return owner_user
+
+    def __fetch_crate_version_downloads(self, crate_id):
+        """Get crate version downloads"""
+
+        raw_version_downloads = self.client.crate_attribute(crate_id, "downloads")
+
+        version_downloads = json.loads(raw_version_downloads)
+
+        return version_downloads
 
     def __fetch_crate_data(self, crate_id):
         """Get crate data"""
