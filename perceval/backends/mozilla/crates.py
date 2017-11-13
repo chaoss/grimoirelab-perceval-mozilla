@@ -172,6 +172,7 @@ class Crates(Backend):
                 crate['owner_team_data'] = self.__fetch_crate_owner_team(crate_id)
                 crate['owner_user_data'] = self.__fetch_crate_owner_user(crate_id)
                 crate['version_downloads_data'] = self.__fetch_crate_version_downloads(crate_id)
+                crate['versions_data'] = self.__fetch_crate_versions(crate_id)
 
                 yield crate
 
@@ -192,6 +193,15 @@ class Crates(Backend):
         owner_user = json.loads(raw_owner_user)
 
         return owner_user
+
+    def __fetch_crate_versions(self, crate_id):
+        """Get crate versions data"""
+
+        raw_versions = self.client.crate_attribute(crate_id, "versions")
+
+        version_downloads = json.loads(raw_versions)
+
+        return version_downloads
 
     def __fetch_crate_version_downloads(self, crate_id):
         """Get crate version downloads"""
