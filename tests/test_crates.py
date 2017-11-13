@@ -161,6 +161,30 @@ def setup_http_server(empty=False):
                                body=crate_version_downloads_4,
                                status=200)
 
+        crate_versions_1 = read_file('data/crates/crate_versions_1')
+        crate_versions_2 = read_file('data/crates/crate_versions_2')
+        crate_versions_3 = read_file('data/crates/crate_versions_3')
+        crate_versions_4 = read_file('data/crates/crate_versions_4')
+
+        httpretty.register_uri(httpretty.GET,
+                               CRATES_API_URL + 'crates/a/versions',
+                               body=crate_versions_1,
+                               status=200)
+
+        httpretty.register_uri(httpretty.GET,
+                               CRATES_API_URL + 'crates/aabb2/versions',
+                               body=crate_versions_2,
+                               status=200)
+
+        httpretty.register_uri(httpretty.GET,
+                               CRATES_API_URL + 'crates/aac/versions',
+                               body=crate_versions_3,
+                               status=200)
+        httpretty.register_uri(httpretty.GET,
+                               CRATES_API_URL + 'crates/abc/versions',
+                               body=crate_versions_4,
+                               status=200)
+
 
 class TestCratesBackend(unittest.TestCase):
     """Crates.io backend tests"""
@@ -209,24 +233,28 @@ class TestCratesBackend(unittest.TestCase):
         self.assertEqual(len(item['data']['owner_team_data']['teams']), 0)
         self.assertEqual(len(item['data']['owner_user_data']['users']), 1)
         self.assertEqual(len(item['data']['version_downloads_data']['version_downloads']), 2)
+        self.assertEqual(len(item['data']['versions_data']['versions']), 1)
 
         item = items[1]
         self.assertEqual(item['category'], CRATES_CATEGORY)
         self.assertEqual(len(item['data']['owner_team_data']['teams']), 1)
         self.assertEqual(len(item['data']['owner_user_data']['users']), 2)
         self.assertEqual(len(item['data']['version_downloads_data']), 0)
+        self.assertEqual(len(item['data']['versions_data']['versions']), 5)
 
         item = items[2]
         self.assertEqual(item['category'], CRATES_CATEGORY)
         self.assertEqual(len(item['data']['owner_team_data']['teams']), 1)
         self.assertEqual(len(item['data']['owner_user_data']['users']), 2)
         self.assertEqual(len(item['data']['version_downloads_data']), 0)
+        self.assertEqual(len(item['data']['versions_data']['versions']), 1)
 
         item = items[3]
         self.assertEqual(item['category'], CRATES_CATEGORY)
         self.assertEqual(len(item['data']['owner_team_data']['teams']), 1)
         self.assertEqual(len(item['data']['owner_user_data']['users']), 3)
         self.assertEqual(len(item['data']['version_downloads_data']), 0)
+        self.assertEqual(len(item['data']['versions_data']['versions']), 7)
 
     @httpretty.activate
     def test_fetch_summary(self):
@@ -252,16 +280,23 @@ class TestCratesBackend(unittest.TestCase):
         from_date = datetime.datetime(2016, 1, 1)
         items = [items for items in backend.fetch(from_date=from_date)]
 
-        self.assertEqual(len(items), 3)
-        self.assertEqual(len(items[0]['data']['owner_team_data']['teams']), 1)
-        self.assertEqual(len(items[0]['data']['owner_user_data']['users']), 2)
-        self.assertEqual(len(items[0]['data']['version_downloads_data']), 0)
-        self.assertEqual(len(items[1]['data']['owner_team_data']['teams']), 1)
-        self.assertEqual(len(items[1]['data']['owner_user_data']['users']), 2)
-        self.assertEqual(len(items[1]['data']['version_downloads_data']), 0)
-        self.assertEqual(len(items[2]['data']['owner_team_data']['teams']), 1)
-        self.assertEqual(len(items[2]['data']['owner_user_data']['users']), 3)
-        self.assertEqual(len(items[2]['data']['version_downloads_data']), 0)
+        item = items[0]
+        self.assertEqual(len(item['data']['owner_team_data']['teams']), 1)
+        self.assertEqual(len(item['data']['owner_user_data']['users']), 2)
+        self.assertEqual(len(item['data']['version_downloads_data']), 0)
+        self.assertEqual(len(item['data']['versions_data']['versions']), 5)
+
+        item = items[1]
+        self.assertEqual(len(item['data']['owner_team_data']['teams']), 1)
+        self.assertEqual(len(item['data']['owner_user_data']['users']), 2)
+        self.assertEqual(len(item['data']['version_downloads_data']), 0)
+        self.assertEqual(len(item['data']['versions_data']['versions']), 1)
+
+        item = items[2]
+        self.assertEqual(len(item['data']['owner_team_data']['teams']), 1)
+        self.assertEqual(len(item['data']['owner_user_data']['users']), 3)
+        self.assertEqual(len(item['data']['version_downloads_data']), 0)
+        self.assertEqual(len(item['data']['versions_data']['versions']), 7)
 
     @httpretty.activate
     def test_fetch_summary_from_date(self):
