@@ -392,7 +392,7 @@ class TestReMoClient(unittest.TestCase):
         # Set up a mock HTTP server
         body = read_file('data/remo/remo_events_page_1_2.json')
         client = ReMoClient(MOZILLA_REPS_SERVER_URL)
-        response = client.call(MOZILLA_REPS_API + '/events/?page=1')
+        response = client.fetch(MOZILLA_REPS_API + '/events/?page=1')
         req = HTTPServer.requests_http[-1]
         self.assertEqual(response, body)
         self.assertEqual(req.method, 'GET')

@@ -23,16 +23,15 @@
 import json
 import logging
 
-import requests
-
 from grimoirelab.toolkit.datetime import str_to_datetime
 
-from ...backend import (Backend,
-                        BackendCommand,
-                        BackendCommandArgumentParser,
-                        metadata)
-from ...errors import CacheError
-from ...utils import DEFAULT_DATETIME
+from perceval.backend import (Backend,
+                              BackendCommand,
+                              BackendCommandArgumentParser,
+                              metadata)
+from perceval.client import HttpClient
+from perceval.errors import CacheError
+from perceval.utils import DEFAULT_DATETIME
 
 
 logger = logging.getLogger(__name__)
@@ -182,7 +181,7 @@ class MozillaClub(Backend):
         return float(date.timestamp())
 
 
-class MozillaClubClient:
+class MozillaClubClient(HttpClient):
     """MozillaClub API client.
 
     This class implements a simple client to retrieve events from
@@ -193,28 +192,16 @@ class MozillaClubClient:
     :raises HTTPError: when an error occurs doing the request
     """
     def __init__(self, url):
-        self.url = url
-
-    def call(self, uri):
-        """Run an API command.
-
-        :param params: dict with the HTTP parameters needed to run
-            the given command
-        """
-        logger.debug("MozillaClub client calls API: %s", self.url)
-
-        req = requests.get(uri)
-        req.raise_for_status()
-
-        return req.text
+        super().__init__(url)
 
     def get_cells(self):
         """Retrieve all cells from the spreadsheet."""
 
         logger.info("Retrieving all cells spreadsheet data ...")
-        raw_cells = self.call(self.url)
+        logger.debug("MozillaClub client calls API: %s", self.base_url)
+        raw_cells = self.fetch(self.base_url)
 
-        return raw_cells
+        return raw_cells.text
 
 
 class MozillaClubParser:

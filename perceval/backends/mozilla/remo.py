@@ -24,16 +24,15 @@ import functools
 import json
 import logging
 
-import requests
-
 from grimoirelab.toolkit.datetime import str_to_datetime
 from grimoirelab.toolkit.uris import urijoin
 
-from ...backend import (Backend,
-                        BackendCommand,
-                        BackendCommandArgumentParser,
-                        metadata)
-from ...errors import CacheError
+from perceval.backend import (Backend,
+                              BackendCommand,
+                              BackendCommandArgumentParser,
+                              metadata)
+from perceval.client import HttpClient
+from perceval.errors import CacheError
 
 
 logger = logging.getLogger(__name__)
@@ -130,7 +129,7 @@ class ReMo(Backend):
                     # Remove extra items due to page base retrieval
                     drop_items -= 1
                     continue
-                raw_item_details = self.client.call(item['_url'])
+                raw_item_details = self.client.fetch(item['_url'])
                 self._push_cache_queue(raw_item_details)
                 item_details = json.loads(raw_item_details)
                 item_details['offset'] = current_offset
@@ -246,7 +245,7 @@ class ReMo(Backend):
         return category
 
 
-class ReMoClient:
+class ReMoClient(HttpClient):
     """ReMo API client.
 
     This class implements a simple client to retrieve events from
@@ -262,26 +261,13 @@ class ReMoClient:
     API_PATH = '/api/remo/v1'
 
     def __init__(self, url):
-        self.url = url
-        self.api_activities_url = urijoin(self.url, ReMoClient.API_PATH + '/activities/')
+        super().__init__(url)
+        self.api_activities_url = urijoin(self.base_url, ReMoClient.API_PATH + '/activities/')
         self.api_activities_url += '/'  # API needs a final /
-        self.api_events_url = urijoin(self.url, ReMoClient.API_PATH + '/events/')
+        self.api_events_url = urijoin(self.base_url, ReMoClient.API_PATH + '/events/')
         self.api_events_url += '/'  # API needs a final /
-        self.api_users_url = urijoin(self.url, ReMoClient.API_PATH + '/users/')
+        self.api_users_url = urijoin(self.base_url, ReMoClient.API_PATH + '/users/')
         self.api_users_url += '/'  # API needs a final /
-
-    def call(self, uri, params=None):
-        """Run an API command.
-        :param params: dict with the HTTP parameters needed to run
-            the given command
-        """
-        logger.debug("ReMo client calls APIv2: %s params: %s",
-                     uri, str(params))
-
-        req = requests.get(uri, params=params)
-        req.raise_for_status()
-
-        return req.text
 
     def get_items(self, category='events', offset=REMO_DEFAULT_OFFSET):
         """Retrieve all items for category using pagination """
@@ -305,7 +291,10 @@ class ReMoClient:
                 "page": page
             }
 
-            raw_items = self.call(api, params)
+            logger.debug("ReMo client calls APIv2: %s params: %s",
+                         api, str(params))
+
+            raw_items = self.fetch(api, payload=params)
             yield raw_items
 
             items_data = json.loads(raw_items)
@@ -316,6 +305,13 @@ class ReMoClient:
             else:
                 # https://reps.mozilla.org/remo/api/remo/v1/events/?page=269
                 page = next_uri.split("page=")[1]
+
+    def fetch(self, url, payload=None):
+        """Return the textual content associated to the Response object"""
+
+        response = super().fetch(url, payload)
+
+        return response.text
 
 
 class ReMoCommand(BackendCommand):
