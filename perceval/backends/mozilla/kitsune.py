@@ -29,11 +29,12 @@ import requests
 from grimoirelab.toolkit.datetime import str_to_datetime
 from grimoirelab.toolkit.uris import urijoin
 
-from ...backend import (Backend,
-                        BackendCommand,
-                        BackendCommandArgumentParser,
-                        metadata)
-from ...errors import CacheError, ParseError
+from perceval.backend import (Backend,
+                              BackendCommand,
+                              BackendCommandArgumentParser,
+                              metadata)
+from perceval.client import HttpClient
+from perceval.errors import CacheError, ParseError
 
 
 logger = logging.getLogger(__name__)
@@ -277,7 +278,7 @@ class Kitsune(Backend):
         return 'question'
 
 
-class KitsuneClient:
+class KitsuneClient(HttpClient):
     """Kitsune API client.
 
     This class implements a simple client to retrieve questions and answers from
@@ -291,22 +292,7 @@ class KitsuneClient:
     ITEMS_PER_PAGE = 20  # Items per page in Kitsune API
 
     def __init__(self, url):
-        self.url = url
-        self.api_url = urijoin(self.url, '/api/2/')
-
-    def call(self, api_url, params):
-        """Run an API command.
-        :param api_url: api url to run on the server
-        :param params: dict with the HTTP parameters needed to run
-            the given command
-        """
-        logger.debug("Kitsune client calls API: %s params: %s",
-                     api_url, str(params))
-
-        req = requests.get(api_url, params=params)
-        req.raise_for_status()
-
-        return req.text
+        super().__init__(urijoin(url, '/api/2/'))
 
     def get_questions(self, offset=None):
         """Retrieve questions from older to newer updated starting offset"""
@@ -316,17 +302,15 @@ class KitsuneClient:
         if offset:
             page += int(offset / KitsuneClient.ITEMS_PER_PAGE)
 
-        next_uri = None  # URI for the next questions query
-
         while True:
-            api_questions_url = urijoin(self.api_url, '/question') + '/'
+            api_questions_url = urijoin(self.base_url, '/question') + '/'
 
             params = {
                 "page": page,
                 "ordering": "updated"
             }
 
-            questions = self.call(api_questions_url, params)
+            questions = self.fetch(api_questions_url, params)
             yield questions
 
             questions_json = json.loads(questions)
@@ -341,19 +325,30 @@ class KitsuneClient:
         page = KitsuneClient.FIRST_PAGE
 
         while True:
-            api_answers_url = urijoin(self.api_url, '/answer') + '/'
+            api_answers_url = urijoin(self.base_url, '/answer') + '/'
             params = {
                 "page": page,
                 "question": question_id,
                 "ordering": "updated"
             }
-            answers_raw = self.call(api_answers_url, params)
+
+            answers_raw = self.fetch(api_answers_url, params)
             yield answers_raw
 
             answers = json.loads(answers_raw)
             if not answers['next']:
                 break
             page += 1
+
+    def fetch(self, url, params):
+        """Return the textual content associated to the Response object"""
+
+        logger.debug("Kitsune client calls API: %s params: %s",
+                     url, str(params))
+
+        response = super().fetch(url, payload=params)
+
+        return response.text
 
 
 class KitsuneCommand(BackendCommand):
