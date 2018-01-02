@@ -22,7 +22,6 @@
 
 import json
 import logging
-import time
 
 import requests
 
@@ -31,11 +30,12 @@ from grimoirelab.toolkit.datetime import (datetime_utcnow,
                                           str_to_datetime)
 from grimoirelab.toolkit.uris import urijoin
 
-from ...backend import (Backend,
-                        BackendCommand,
-                        BackendCommandArgumentParser,
-                        metadata)
-from ...utils import DEFAULT_DATETIME
+from perceval.backend import (Backend,
+                              BackendCommand,
+                              BackendCommandArgumentParser,
+                              metadata)
+from perceval.client import HttpClient
+from perceval.utils import DEFAULT_DATETIME
 
 CRATES_URL = "https://crates.io/"
 CRATES_API_URL = 'https://crates.io/api/v1/'
@@ -221,19 +221,20 @@ class Crates(Backend):
         return crate['crate']
 
 
-class CratesClient:
+class CratesClient(HttpClient):
     """Client for retrieving information from Crates API"""
 
     MAX_RETRIES = 5
 
     def __init__(self, sleep_time=SLEEP_TIME):
-        self.sleep_time = sleep_time
+        super().__init__(CRATES_API_URL, default_sleep_time=sleep_time, max_retries=CratesClient.MAX_RETRIES,
+                         extra_headers={'Content-type': 'application/json'})
 
     def summary(self):
         """Get Crates.io summary"""
 
         path = urijoin(CRATES_API_URL, SUMMARY_CATEGORY)
-        raw_content = self.__send_request(path, headers=self.__set_headers())
+        raw_content = self.fetch(path)
 
         return raw_content
 
@@ -249,7 +250,7 @@ class CratesClient:
         """Get a crate by its ID"""
 
         path = urijoin(CRATES_API_URL, CRATES_CATEGORY, crate_id)
-        raw_crate = self.__send_request(path, headers=self.__set_headers())
+        raw_crate = self.fetch(path)
 
         return raw_crate
 
@@ -257,54 +258,9 @@ class CratesClient:
         """Get crate attribute"""
 
         path = urijoin(CRATES_API_URL, CRATES_CATEGORY, crate_id, attribute)
-        raw_attribute_data = self.__send_request(path, headers=self.__set_headers())
+        raw_attribute_data = self.fetch(path)
 
         return raw_attribute_data
-
-    def __get_url_package(self):
-        """Build URL package"""
-
-        url = urijoin(CRATES_URL)
-
-        return url
-
-    def __set_headers(self):
-        """Set header for request"""
-
-        headers = {'Content-type': 'application/json'}
-
-        return headers
-
-    def __send_request(self, url, params=None, headers=None):
-        """Send request"""
-
-        retries = 0
-
-        while retries < self.MAX_RETRIES:
-            try:
-                r = requests.get(url,
-                                 params=params,
-                                 headers=headers)
-                break
-            except requests.exceptions.ConnectionError:
-                logger.warning("Connection was lost, the backend will sleep for " +
-                               str(self.sleep_time) + "s before starting again")
-                time.sleep(self.sleep_time * retries)
-                retries += 1
-
-        r.raise_for_status()
-
-        return r.text
-
-    def __build_payload(self, page=None):
-        """Build payload"""
-
-        payload = {'sort': 'alphabetical'}
-
-        if page:
-            payload['page'] = str(page)
-
-        return payload
 
     def __fetch_items(self, path, page=1):
         """Return the items from Crates.io API using pagination"""
@@ -317,8 +273,8 @@ class CratesClient:
             logger.debug("Fetching page: %i", page)
 
             try:
-                payload = self.__build_payload(page=page)
-                raw_content = self.__send_request(path, payload, self.__set_headers())
+                payload = {'sort': 'alphabetical', 'page': page}
+                raw_content = self.fetch(path, payload=payload)
                 content = json.loads(raw_content)
 
                 parsed_crates += len(content['crates'])
@@ -335,6 +291,13 @@ class CratesClient:
 
             if parsed_crates >= total_crates:
                 fetch_data = False
+
+    def fetch(self, url, payload=None):
+        """Return the textual content associated to the Response object"""
+
+        response = super().fetch(url, payload=payload)
+
+        return response.text
 
 
 class CratesCommand(BackendCommand):
