@@ -22,10 +22,18 @@
 #
 
 import datetime
+import sys
 import json
 import unittest
 
 import httpretty
+
+import pkg_resources
+
+# Hack to make sure that tests import the right packages
+# due to setuptools behaviour
+sys.path.insert(0, '..')
+pkg_resources.declare_namespace('perceval.backends')
 
 from perceval.backend import BackendCommandArgumentParser
 from perceval.backends.mozilla.crates import (Crates,
