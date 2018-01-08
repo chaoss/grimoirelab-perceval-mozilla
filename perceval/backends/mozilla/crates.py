@@ -227,7 +227,7 @@ class CratesClient(HttpClient):
     MAX_RETRIES = 5
 
     def __init__(self, sleep_time=SLEEP_TIME):
-        super().__init__(CRATES_API_URL, default_sleep_time=sleep_time, max_retries=CratesClient.MAX_RETRIES,
+        super().__init__(CRATES_API_URL, sleep_time=sleep_time, max_retries=CratesClient.MAX_RETRIES,
                          extra_headers={'Content-type': 'application/json'})
 
     def summary(self):
