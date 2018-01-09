@@ -25,13 +25,13 @@ import logging
 
 from grimoirelab.toolkit.datetime import str_to_datetime
 
-from perceval.backend import (Backend,
-                              BackendCommand,
-                              BackendCommandArgumentParser,
-                              metadata)
-from perceval.client import HttpClient
-from perceval.errors import CacheError
-from perceval.utils import DEFAULT_DATETIME
+from ...backend import (Backend,
+                        BackendCommand,
+                        BackendCommandArgumentParser,
+                        metadata)
+from ...client import HttpClient
+from ...errors import CacheError
+from ...utils import DEFAULT_DATETIME
 
 
 logger = logging.getLogger(__name__)

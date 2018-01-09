@@ -31,7 +31,10 @@ import httpretty
 from perceval.backend import BackendCommandArgumentParser
 from perceval.cache import Cache
 from perceval.errors import CacheError
-from perceval.backends.mozilla.mozillaclub import MozillaClub, MozillaClubCommand, MozillaClubClient, MozillaClubParser
+from perceval.backends.mozilla.mozillaclub import (MozillaClub,
+                                                   MozillaClubCommand,
+                                                   MozillaClubClient,
+                                                   MozillaClubParser)
 
 
 MozillaClub_FEED_URL = 'http://example.com/feed'
