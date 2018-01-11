@@ -31,6 +31,7 @@ from perceval.backend import BackendCommandArgumentParser
 from perceval.backends.mozilla.crates import (Crates,
                                               CratesClient,
                                               CratesCommand,
+                                              SLEEP_TIME,
                                               CRATES_CATEGORY,
                                               SUMMARY_CATEGORY)
 
@@ -394,7 +395,14 @@ class TestCratesCommand(unittest.TestCase):
         self.assertEqual(parsed_args.tag, 'test')
         self.assertEqual(parsed_args.from_date, DEFAULT_DATETIME)
         self.assertEqual(parsed_args.category, SUMMARY_CATEGORY)
-        self.assertEqual(parsed_args.sleep_time, '600')
+        self.assertEqual(parsed_args.sleep_time, 600)
+
+        args = ['--tag', 'test',
+                '--from-date', '1970-01-01',
+                '--category', 'summary']
+        parsed_args = parser.parse(*args)
+
+        self.assertEqual(parsed_args.sleep_time, SLEEP_TIME)
 
 
 if __name__ == "__main__":
