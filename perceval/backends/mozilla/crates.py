@@ -43,7 +43,7 @@ CRATES_API_URL = 'https://crates.io/api/v1/'
 CRATES_CATEGORY = 'crates'
 SUMMARY_CATEGORY = 'summary'
 
-SLEEP_TIME = 300
+SLEEP_TIME = 60
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +57,7 @@ class Crates(Backend):
     :param tag: label used to mark the data
     :param cache: use issues already retrieved in cache
     """
-    version = '0.1.2'
+    version = '0.1.3'
 
     def __init__(self, sleep_time=SLEEP_TIME, tag=None, cache=None):
         origin = CRATES_URL
@@ -316,6 +316,7 @@ class CratesCommand(BackendCommand):
         # Optional arguments
         group = parser.parser.add_argument_group('Crates.io arguments')
         group.add_argument('--sleep-time', dest='sleep_time',
+                           default=SLEEP_TIME, type=int,
                            help="Sleep time in case of connection lost")
         group.add_argument('--category', default=CRATES_CATEGORY,
                            choices=(CRATES_CATEGORY, SUMMARY_CATEGORY),
