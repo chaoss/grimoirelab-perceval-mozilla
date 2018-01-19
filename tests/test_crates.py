@@ -34,8 +34,8 @@ from perceval.backends.mozilla.crates import (Crates,
                                               SLEEP_TIME,
                                               CRATES_CATEGORY,
                                               SUMMARY_CATEGORY)
-
 from perceval.utils import DEFAULT_DATETIME
+from tests.base import TestCaseBackendArchive
 
 CRATES_API_URL = "https://crates.io/api/v1/"
 
@@ -197,6 +197,7 @@ class TestCratesBackend(unittest.TestCase):
 
         self.assertEqual(crates.origin, 'https://crates.io/')
         self.assertEqual(crates.tag, 'test')
+        self.assertIsNone(crates.client)
 
         # When tag is empty or None it will be set to
         # the value in origin
@@ -208,10 +209,10 @@ class TestCratesBackend(unittest.TestCase):
         self.assertEqual(crates.origin, 'https://crates.io/')
         self.assertEqual(crates.tag, 'https://crates.io/')
 
-    def test_has_caching(self):
-        """Test if it returns True when has_caching is called"""
+    def test_has_archiving(self):
+        """Test if it returns True when has_archiving is called"""
 
-        self.assertEqual(Crates.has_caching(), False)
+        self.assertEqual(Crates.has_archiving(), True)
 
     def test_has_resuming(self):
         """Test if it returns True when has_resuming is called"""
@@ -225,7 +226,7 @@ class TestCratesBackend(unittest.TestCase):
         setup_http_server()
 
         backend = Crates()
-        items = [items for items in backend.fetch()]
+        items = [items for items in backend.fetch(from_date=None)]
 
         self.assertEqual(len(items), 4)
 
@@ -325,6 +326,75 @@ class TestCratesBackend(unittest.TestCase):
         items = [items for items in backend.fetch()]
 
         self.assertEqual(len(items), 0)
+
+
+class TestCratesBackendArchive(TestCaseBackendArchive):
+    """Crates backend tests using an archive"""
+
+    def setUp(self):
+        super().setUp()
+        self.backend = Crates(archive=self.archive)
+
+    @httpretty.activate
+    def test_fetch_crates_from_archive(self):
+        """Test whether a list of crates is returned from archive"""
+
+        setup_http_server()
+        self._test_fetch_from_archive()
+
+    @httpretty.activate
+    def test_fetch_summary_from_archive(self):
+        """Test whether a summary is returned from archive"""
+
+        setup_http_server()
+        items = [items for items in self.backend.fetch(category=SUMMARY_CATEGORY)]
+        items_archived = [items for items in self.backend.fetch_from_archive()]
+
+        self.assertEqual(len(items), len(items_archived))
+
+        item = items[0]
+        item_archived = items_archived[0]
+
+        del item['data']['fetched_on']
+        del item_archived['data']['fetched_on']
+
+        self.assertEqual(item['data'], item_archived['data'])
+
+    @httpretty.activate
+    def test_fetch_from_date_from_archive(self):
+        """Test when return from date from archive"""
+
+        setup_http_server()
+
+        from_date = datetime.datetime(2016, 1, 1)
+        self._test_fetch_from_archive(from_date=from_date)
+
+    @httpretty.activate
+    def test_fetch_summary_from_date_from_archive(self):
+        """Test when return from date from archive"""
+
+        setup_http_server()
+
+        from_date = datetime.datetime(2016, 1, 1)
+        items = [items for items in self.backend.fetch(category=SUMMARY_CATEGORY, from_date=from_date)]
+        items_archived = [items for items in self.backend.fetch_from_archive()]
+
+        self.assertEqual(len(items), len(items_archived))
+
+        item = items[0]
+        item_archived = items_archived[0]
+
+        del item['data']['fetched_on']
+        del item_archived['data']['fetched_on']
+
+        self.assertEqual(item['data'], item_archived['data'])
+
+    @httpretty.activate
+    def test_fetch_empty_from_archive(self):
+        """Test when fetch from archive return nothing when the archive is empty"""
+
+        setup_http_server(empty=True)
+        self._test_fetch_from_archive()
 
 
 class TestCratesClient(unittest.TestCase):
