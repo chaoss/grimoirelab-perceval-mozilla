@@ -23,21 +23,16 @@
 #
 
 import re
-import shutil
-import tempfile
 import unittest
 
 import httpretty
 
 from perceval.backend import BackendCommandArgumentParser
-from perceval.cache import Cache
-from perceval.errors import CacheError
-
 from perceval.backends.mozilla.remo import (ReMo,
                                             ReMoCommand,
                                             ReMoClient,
                                             MOZILLA_REPS_URL)
-
+from tests.base import TestCaseBackendArchive
 
 MOZILLA_REPS_SERVER_URL = 'http://example.com'
 MOZILLA_REPS_API = MOZILLA_REPS_SERVER_URL + '/api/remo/v1'
@@ -110,7 +105,7 @@ class TestReMoBackend(unittest.TestCase):
         self.assertEqual(remo.url, MOZILLA_REPS_SERVER_URL)
         self.assertEqual(remo.origin, MOZILLA_REPS_SERVER_URL)
         self.assertEqual(remo.tag, 'test')
-        self.assertIsInstance(remo.client, ReMoClient)
+        self.assertIsNone(remo.client)
 
         # When tag is empty or None it will be set to
         # the value in url
@@ -130,10 +125,10 @@ class TestReMoBackend(unittest.TestCase):
         self.assertEqual(remo.origin, MOZILLA_REPS_URL)
         self.assertEqual(remo.tag, MOZILLA_REPS_URL)
 
-    def test_has_caching(self):
-        """Test if it returns True when has_caching is called"""
+    def test_has_archiving(self):
+        """Test if it returns True when has_archiving is called"""
 
-        self.assertEqual(ReMo.has_caching(), True)
+        self.assertEqual(ReMo.has_archiving(), True)
 
     def test_has_resuming(self):
         """Test if it returns True when has_resuming is called"""
@@ -186,7 +181,7 @@ class TestReMoBackend(unittest.TestCase):
         # Test fetch events with their reviews
         remo = ReMo(MOZILLA_REPS_SERVER_URL)
 
-        items = [page for page in remo.fetch(category=category)]
+        items = [page for page in remo.fetch(offset=None, category=category)]
 
         self.assertEqual(len(items), items_page * pages)
 
@@ -218,6 +213,40 @@ class TestReMoBackend(unittest.TestCase):
 
     def test_fetch_users(self):
         self.__test_fetch(category='users')
+
+    @httpretty.activate
+    def tests_wrong_metadata_updated_on(self):
+
+        HTTPServer.routes()
+        prev_requests_http = len(HTTPServer.requests_http)
+
+        # Test fetch events with their reviews
+        remo = ReMo(MOZILLA_REPS_SERVER_URL)
+
+        items = [page for page in remo.fetch(offset=None, category="events")]
+        item = items[0]
+
+        item.pop('end', None)
+
+        with self.assertRaises(ValueError):
+            remo.metadata_updated_on(item)
+
+    @httpretty.activate
+    def tests_wrong_metadata_category(self):
+
+        HTTPServer.routes()
+        prev_requests_http = len(HTTPServer.requests_http)
+
+        # Test fetch events with their reviews
+        remo = ReMo(MOZILLA_REPS_SERVER_URL)
+
+        items = [page for page in remo.fetch(offset=None, category="events")]
+        item = items[0]
+
+        item.pop('estimated_attendance', None)
+
+        with self.assertRaises(TypeError):
+            remo.metadata_category(item)
 
     @httpretty.activate
     def test_fetch_offset(self):
@@ -260,66 +289,49 @@ class TestReMoBackend(unittest.TestCase):
         self.assertEqual(len(events), 0)
 
 
-class TestReMoBackendCache(unittest.TestCase):
-    """ReMo backend tests using a cache"""
+class TestRemoBackendArchive(TestCaseBackendArchive):
+    """Remo backend tests using an archive"""
 
     def setUp(self):
-        self.tmp_path = tempfile.mkdtemp(prefix='perceval_')
-
-    def tearDown(self):
-        shutil.rmtree(self.tmp_path)
+        super().setUp()
+        self.backend = ReMo(MOZILLA_REPS_SERVER_URL, archive=self.archive)
 
     @httpretty.activate
-    def __test_fetch_from_cache(self, category):
-        """Test whether the cache works"""
+    def __test_fetch_from_archive(self, category='events'):
+        """Test whether the events are returned from archive"""
 
         HTTPServer.routes()
+        self._test_fetch_from_archive(category=category)
 
-        # First, we fetch the events from the server, storing them
-        # in a cache
-        cache = Cache(self.tmp_path)
-        remo = ReMo(MOZILLA_REPS_SERVER_URL, cache=cache)
+    def test_fetch_events(self):
+        self.__test_fetch_from_archive(category='events')
 
-        items = [item for item in remo.fetch(category=category)]
+    def test_fetch_activities(self):
+        self.__test_fetch_from_archive(category='activities')
 
-        requests_done = len(HTTPServer.requests_http)
+    def test_fetch_users(self):
+        self.__test_fetch_from_archive(category='users')
 
-        # Now, we get the items from the cache.
-        # The contents should be the same and there won't be
-        # any new request to the server
-        cached_items = [item for item in remo.fetch_from_cache()]
-        # No new requests to the server
-        self.assertEqual(len(HTTPServer.requests_http), requests_done)
-        # The contents should be the same
-        self.assertEqual(len(cached_items), len(items))
-        for i in range(0, len(items)):
-            self.assertDictEqual(cached_items[i]['data'], items[i]['data'])
-            self.assertEqual(cached_items[i]['offset'], items[i]['offset'])
+    @httpretty.activate
+    def test_fetch_offset_from_archive_15(self):
+        """Test whether the events with offset are returned from archive"""
 
-    def test_fetch_from_cache_events(self):
-        self.__test_fetch_from_cache('events')
+        HTTPServer.routes()
+        self._test_fetch_from_archive(offset=15)
 
-    def test_fetch_from_cache_users(self):
-        self.__test_fetch_from_cache('users')
+    @httpretty.activate
+    def test_fetch_offset_from_archive_5(self):
+        """Test whether the events with offset are returned from archive"""
 
-    def test_fetch_from_cache_activitites(self):
-        self.__test_fetch_from_cache('activities')
+        HTTPServer.routes()
+        self._test_fetch_from_archive(offset=5)
 
-    def test_fetch_from_empty_cache(self):
-        """Test if there are not any events returned when the cache is empty"""
+    @httpretty.activate
+    def test_fetch_empty_from_archive(self):
+        """Test whether it works when no items are fetched from archive"""
 
-        cache = Cache(self.tmp_path)
-        remo = ReMo(MOZILLA_REPS_SERVER_URL, cache=cache)
-        cached_events = [event for event in remo.fetch_from_cache()]
-        self.assertEqual(len(cached_events), 0)
-
-    def test_fetch_from_non_set_cache(self):
-        """Test if a error is raised when the cache was not set"""
-
-        remo = ReMo(MOZILLA_REPS_SERVER_URL)
-
-        with self.assertRaises(CacheError):
-            _ = [event for event in remo.fetch_from_cache()]
+        HTTPServer.routes(empty=True)
+        self._test_fetch_from_archive()
 
 
 class TestReMoCommand(unittest.TestCase):
@@ -339,14 +351,14 @@ class TestReMoCommand(unittest.TestCase):
         args = [MOZILLA_REPS_SERVER_URL,
                 '--category', 'users',
                 '--tag', 'test',
-                '--no-cache',
+                '--no-archive',
                 '--offset', '88']
 
         parsed_args = parser.parse(*args)
         self.assertEqual(parsed_args.url, MOZILLA_REPS_SERVER_URL)
         self.assertEqual(parsed_args.category, 'users')
         self.assertEqual(parsed_args.tag, 'test')
-        self.assertEqual(parsed_args.no_cache, True)
+        self.assertEqual(parsed_args.no_archive, True)
         self.assertEqual(parsed_args.offset, 88)
 
 
@@ -382,6 +394,19 @@ class TestReMoClient(unittest.TestCase):
             'page': ['1']
         }
         self.assertDictEqual(req.querystring, expected)
+
+    @httpretty.activate
+    def test_get_wrong_items(self):
+        """Test get_events API call"""
+
+        HTTPServer.routes()
+
+        # Set up a mock HTTP server
+        body = read_file('data/remo/remo_events_page_1_2.json')
+        client = ReMoClient(MOZILLA_REPS_SERVER_URL)
+
+        with self.assertRaises(ValueError):
+            _ = next(client.get_items(category='wrong'))
 
     @httpretty.activate
     def test_call(self):
