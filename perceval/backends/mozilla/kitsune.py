@@ -20,7 +20,6 @@
 #     Alvaro del Castillo <acs@bitergia.com>
 #
 
-import functools
 import json
 import logging
 
@@ -31,30 +30,15 @@ from grimoirelab.toolkit.uris import urijoin
 
 from ...backend import (Backend,
                         BackendCommand,
-                        BackendCommandArgumentParser,
-                        metadata)
+                        BackendCommandArgumentParser)
 from ...client import HttpClient
-from ...errors import CacheError, ParseError
+from ...errors import ParseError
 
 
 logger = logging.getLogger(__name__)
 
 KITSUNE_URL = "https://support.mozilla.org"
 DEFAULT_OFFSET = 0
-
-
-def kitsune_metadata(func):
-    """Kitsune metadata decorator.
-
-    This decorator takes items overrides `metadata` decorator to add extra
-    information related to Kitsune (offset of the question).
-    """
-    @functools.wraps(func)
-    def decorator(self, *args, **kwargs):
-        for item in func(self, *args, **kwargs):
-            item['offset'] = item['data'].pop('offset')
-            yield item
-    return decorator
 
 
 class Kitsune(Backend):
@@ -69,33 +53,41 @@ class Kitsune(Backend):
 
     :param url: Kitsune URL
     :param tag: label used to mark the data
-    :param cache: cache object to store raw data
+    :param archive: archive to store/retrieve items
     """
-    version = '0.4.0'
+    version = '0.5.0'
 
-    def __init__(self, url=None, tag=None, cache=None):
+    def __init__(self, url=None, tag=None, archive=None):
         if not url:
             url = KITSUNE_URL
         origin = url
 
-        super().__init__(origin, tag=tag, cache=cache)
+        super().__init__(origin, tag=tag, archive=archive)
         self.url = url
-        self.client = KitsuneClient(url)
 
-    @kitsune_metadata
-    @metadata
+        self.client = None
+
     def fetch(self, offset=DEFAULT_OFFSET):
         """Fetch questions from the Kitsune url.
 
         :offset: obtain questions after offset
         :returns: a generator of questions
         """
+        if not offset:
+            offset = DEFAULT_OFFSET
+
+        kwargs = {"offset": offset}
+        items = super().fetch("question", **kwargs)
+
+        return items
+
+    def fetch_items(self, **kwargs):
+        """Fetch questions from the Kitsune url"""
+
+        offset = kwargs['offset']
+
         logger.info("Looking for questions at url '%s' using offset %s",
                     self.url, str(offset))
-
-        self._purge_cache_queue()
-        # Add to the cache the offset so it can be used to recover from cache
-        self._push_cache_queue(offset)
 
         nquestions = 0  # number of questions processed
         tquestions = 0  # number of questions from API data
@@ -131,8 +123,6 @@ class Kitsune(Backend):
                     # If it is another error just propagate the exception
                     raise e
 
-            self._push_cache_queue(raw_questions)
-
             try:
                 questions_data = json.loads(raw_questions)
                 tquestions = questions_data['count']
@@ -151,92 +141,34 @@ class Kitsune(Backend):
                 current_offset += 1
                 question['answers_data'] = []
                 for raw_answers in self.client.get_question_answers(question['id']):
-                    self._push_cache_queue(raw_answers)
                     answers = json.loads(raw_answers)['results']
                     question['answers_data'] += answers
                 yield question
                 nquestions += 1
-                self._push_cache_queue('{}')  # Mark with empty dict end of question
 
             logger.debug("Questions: %i/%i", nquestions + offset, tquestions)
-
-            self._flush_cache_queue()
 
         logger.info("Total number of questions: %i (%i total)", nquestions, tquestions)
         logger.info("Questions with errors dropped: %i", equestions)
 
-    @kitsune_metadata
-    @metadata
-    def fetch_from_cache(self):
-        """Fetch the questions from the cache.
+    def metadata(self, item):
+        """Kitsune metadata.
 
-        It only works with a cache created from one execution.
+        This method takes items overrides `metadata` method to add extra
+        information related to Kitsune (offset of the question).
 
-        :returns: a generator of questions
-
-        :raises CacheError: raised when an error occurs accessing the
-            cache
+        :param item: an item fetched by a backend
         """
-        def get_drop_questions(offset):
-            page = int(offset / KitsuneClient.ITEMS_PER_PAGE)
-            page_offset = page * KitsuneClient.ITEMS_PER_PAGE
-            drop_questions = offset - page_offset
-            return drop_questions
+        item = super().metadata(item)
+        item['offset'] = item['data'].pop('offset')
 
-        def get_answers(cache_answers):
-            answers_data = []
-
-            for answers_raw in cache_answers:
-                answers = json.loads(answers_raw)
-                if not answers:
-                    # empty dict is the mark for end of question answers
-                    break
-                else:
-                    answers = answers['results']
-                    answers_data += answers
-
-            return answers_data
-
-        if not self.cache:
-            raise CacheError(cause="cache instance was not provided")
-
-        cache_items = self.cache.retrieve()
-
-        nquestions = 0
-
-        logger.info("Retrieving cached questions: '%s'", self.url)
-
-        for items_raw in cache_items:
-            if type(items_raw) is int:
-                # offset from a new execution results in the cache
-                offset = items_raw
-                questions_raw = next(cache_items)
-                drop_questions = get_drop_questions(offset)
-            else:
-                questions_raw = items_raw
-            if not json.loads(questions_raw):
-                # Last item is the empty dict
-                questions_raw = next(cache_items)
-            questions = json.loads(questions_raw)['results']
-            for question in questions:
-                if drop_questions > 0:
-                    # Remove extra questions due to page base retrieval
-                    drop_questions -= 1
-                    continue
-                question['offset'] = offset
-                offset += 1
-                question['answers_data'] = get_answers(cache_items)
-                yield question
-                nquestions += 1
-
-        logger.info("Retrieval process completed: %s questions retrieved from cache",
-                    nquestions)
+        return item
 
     @classmethod
-    def has_caching(cls):
-        """Returns whether it supports caching items on the fetch process.
+    def has_archiving(cls):
+        """Returns whether it supports archiving items on the fetch process.
 
-        :returns: this backend supports items cache
+        :returns: this backend supports items archive
         """
         return True
 
@@ -258,7 +190,7 @@ class Kitsune(Backend):
     def metadata_updated_on(item):
         """Extracts the update time from a Kitsune item.
 
-        The timestamp is extracted from 'timestamp' field.
+        The timestamp is extracted from 'updated' field.
         This date is a UNIX timestamp but needs to be converted to
         a float value.
 
@@ -277,6 +209,11 @@ class Kitsune(Backend):
         """
         return 'question'
 
+    def _init_client(self, from_archive=False):
+        """Init client"""
+
+        return KitsuneClient(self.url, self.archive, from_archive)
+
 
 class KitsuneClient(HttpClient):
     """Kitsune API client.
@@ -285,14 +222,16 @@ class KitsuneClient(HttpClient):
     a Kitsune site.
 
     :param url: URL of Kitsune (sample https://support.mozilla.org)
+    :param archive: an archive to store/read fetched data
+    :param from_archive: it tells whether to write/read the archive
 
     :raises HTTPError: when an error occurs doing the request
     """
     FIRST_PAGE = 1  # Initial page in Kitsune
     ITEMS_PER_PAGE = 20  # Items per page in Kitsune API
 
-    def __init__(self, url):
-        super().__init__(urijoin(url, '/api/2/'))
+    def __init__(self, url, archive=None, from_archive=False):
+        super().__init__(urijoin(url, '/api/2/'), archive=archive, from_archive=from_archive)
 
     def get_questions(self, offset=None):
         """Retrieve questions from older to newer updated starting offset"""
@@ -361,7 +300,7 @@ class KitsuneCommand(BackendCommand):
         """Returns the Kitsune argument parser."""
 
         parser = BackendCommandArgumentParser(offset=True,
-                                              cache=True)
+                                              archive=True)
 
         # Required arguments
         parser.parser.add_argument('url', nargs='?',
