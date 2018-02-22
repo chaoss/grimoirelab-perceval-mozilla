@@ -20,7 +20,6 @@
 #     Alvaro del Castillo <acs@bitergia.com>
 #
 
-import functools
 import json
 import logging
 
@@ -29,30 +28,14 @@ from grimoirelab.toolkit.uris import urijoin
 
 from ...backend import (Backend,
                         BackendCommand,
-                        BackendCommandArgumentParser,
-                        metadata)
+                        BackendCommandArgumentParser)
 from ...client import HttpClient
-from ...errors import CacheError
 
 
 logger = logging.getLogger(__name__)
 
 MOZILLA_REPS_URL = "https://reps.mozilla.org"
 REMO_DEFAULT_OFFSET = 0
-
-
-def remo_metadata(func):
-    """ReMo metadata decorator.
-
-    This decorator takes items overrides `metadata` decorator to add extra
-    information related to Kitsune (offset of the item).
-    """
-    @functools.wraps(func)
-    def decorator(self, *args, **kwargs):
-        for item in func(self, *args, **kwargs):
-            item['offset'] = item['data'].pop('offset')
-            yield item
-    return decorator
 
 
 class ReMo(Backend):
@@ -66,22 +49,21 @@ class ReMo(Backend):
 
     :param url: ReMo URL
     :param tag: label used to mark the data
-    :param cache: cache object to store raw data
+    :param archive: archive to store/retrieve items
     """
-    version = '0.5.0'
+    version = '0.6.0'
 
-    def __init__(self, url=None, tag=None, cache=None):
+    def __init__(self, url=None, tag=None, archive=None):
         if not url:
             url = MOZILLA_REPS_URL
         origin = url
 
-        super().__init__(origin, tag=tag, cache=cache)
+        super().__init__(origin, tag=tag, archive=archive)
         self.url = url
-        self.client = ReMoClient(url)
+        self.client = None
+
         self.__users = {}  # internal users cache
 
-    @remo_metadata
-    @metadata
     def fetch(self, offset=REMO_DEFAULT_OFFSET, category='events'):
         """Fetch items from the ReMo url.
 
@@ -92,13 +74,27 @@ class ReMo(Backend):
         :category: category of items to retrieve
         :returns: a generator of items
         """
+        if not offset:
+            offset = REMO_DEFAULT_OFFSET
+
+        kwargs = {"offset": offset}
+        self.category = category
+        items = super().fetch(category, **kwargs)
+
+        return items
+
+    def fetch_items(self, **kwargs):
+        """Fetch items"""
+
+        offset = kwargs['offset']
+
         supported_categories = ['activities', 'events', 'users']
 
-        if category not in supported_categories:
-            raise ValueError('ReMo perceval backend does not support ' + category)
+        if self.category not in supported_categories:
+            raise ValueError('ReMo perceval backend does not support ' + self.category)
 
         logger.info("Looking for events at url '%s' of %s category and %i offset",
-                    self.url, category, offset)
+                    self.url, self.category, offset)
 
         nitems = 0  # number of items processed
         titems = 0  # number of items from API data
@@ -113,12 +109,7 @@ class ReMo(Backend):
                      drop_items, offset, page, page_offset)
         current_offset = offset
 
-        self._purge_cache_queue()
-        # Add to the cache the offset so it can be used to recover from cache
-        self._push_cache_queue(offset)
-
-        for raw_items in self.client.get_items(category, offset):
-            self._push_cache_queue(raw_items)
+        for raw_items in self.client.get_items(self.category, offset):
             items_data = json.loads(raw_items)
             titems = items_data['count']
             logger.info("Pending items to retrieve: %i, %i current offset",
@@ -130,60 +121,32 @@ class ReMo(Backend):
                     drop_items -= 1
                     continue
                 raw_item_details = self.client.fetch(item['_url'])
-                self._push_cache_queue(raw_item_details)
                 item_details = json.loads(raw_item_details)
                 item_details['offset'] = current_offset
                 current_offset += 1
                 yield item_details
                 nitems += 1
 
-                self._flush_cache_queue()
-
         logger.info("Total number of events: %i (%i total, %i offset)", nitems, titems, offset)
 
-    @remo_metadata
-    @metadata
-    def fetch_from_cache(self):
-        """Fetch the items from the cache.
+    def metadata(self, item):
+        """ReMo metadata.
 
-        :returns: a generator of items
+        This method takes items overrides `metadata` method to add extra
+        information related to Kitsune (offset of the item).
 
-        :raises CacheError: raised when an error occurs accessing the
-            cache
+        :param item: an item fetched by a backend
         """
-        logger.info("Retrieving cached ReMo items: '%s'", self.url)
+        item = super().metadata(item)
+        item['offset'] = item['data'].pop('offset')
 
-        if not self.cache:
-            raise CacheError(cause="cache instance was not provided")
-
-        cache_items = self.cache.retrieve()
-
-        nitems = 0
-
-        for item in cache_items:
-            if type(item) is int:
-                # offset from a new execution results in the cache
-                offset = item
-                item = next(cache_items)
-            data = json.loads(item)
-            # The raw_data is always a list of items or an item
-            if 'count' in data:
-                # It is a list
-                continue
-            else:
-                data['offset'] = offset
-                offset += 1
-                yield data
-                nitems += 1
-
-        logger.info("Retrieval process completed: %s items retrieved from cache",
-                    nitems)
+        return item
 
     @classmethod
-    def has_caching(cls):
-        """Returns whether it supports caching items on the fetch process.
+    def has_archiving(cls):
+        """Returns whether it supports archiving items on the fetch process.
 
-        :returns: this backend supports items cache
+        :returns: this backend supports items archive
         """
         return True
 
@@ -221,7 +184,7 @@ class ReMo(Backend):
             # activities updated field
             updated = item['report_date']
         else:
-            raise ValueError("Can't find updated field for item " + item)
+            raise ValueError("Can't find updated field for item " + str(item))
 
         return float(str_to_datetime(updated).timestamp())
 
@@ -240,9 +203,14 @@ class ReMo(Backend):
         elif 'first_name' in item:
             category = 'user'
         else:
-            raise TypeError("Could not define the category of item " + item)
+            raise TypeError("Could not define the category of item " + str(item))
 
         return category
+
+    def _init_client(self, from_archive=False):
+        """Init client"""
+
+        return ReMoClient(self.url, self.archive, from_archive)
 
 
 class ReMoClient(HttpClient):
@@ -252,6 +220,8 @@ class ReMoClient(HttpClient):
     projects in a ReMo site.
 
     :param url: URL of ReMo (sample https://reps.mozilla.org)
+    :param archive: an archive to store/read fetched data
+    :param from_archive: it tells whether to write/read the archive
 
     :raises HTTPError: when an error occurs doing the request
     """
@@ -260,8 +230,8 @@ class ReMoClient(HttpClient):
     ITEMS_PER_PAGE = 20  # Items per page in ReMo API
     API_PATH = '/api/remo/v1'
 
-    def __init__(self, url):
-        super().__init__(url)
+    def __init__(self, url, archive=None, from_archive=False):
+        super().__init__(url, archive=archive, from_archive=from_archive)
         self.api_activities_url = urijoin(self.base_url, ReMoClient.API_PATH + '/activities/')
         self.api_activities_url += '/'  # API needs a final /
         self.api_events_url = urijoin(self.base_url, ReMoClient.API_PATH + '/events/')
@@ -324,13 +294,7 @@ class ReMoCommand(BackendCommand):
         """Returns the ReMo argument parser."""
 
         parser = BackendCommandArgumentParser(offset=True,
-                                              cache=True)
-
-        # ReMo options
-        group = parser.parser.add_argument_group('ReMo arguments')
-        group.add_argument('--category', default='events',
-                           help="category could be events, activities or users")
-
+                                              archive=True)
         # Required arguments
         parser.parser.add_argument('url', nargs='?',
                                    default="https://reps.mozilla.org",
