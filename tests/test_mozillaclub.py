@@ -22,19 +22,16 @@
 #     Alvaro del Castillo <acs@bitergia.com>
 #
 
-import shutil
-import tempfile
 import unittest
 
 import httpretty
 
 from perceval.backend import BackendCommandArgumentParser
-from perceval.cache import Cache
-from perceval.errors import CacheError
 from perceval.backends.mozilla.mozillaclub import (MozillaClub,
                                                    MozillaClubCommand,
                                                    MozillaClubClient,
                                                    MozillaClubParser)
+from tests.base import TestCaseBackendArchive
 
 
 MozillaClub_FEED_URL = 'http://example.com/feed'
@@ -88,7 +85,7 @@ class TestMozillaClubBackend(unittest.TestCase):
         self.assertEqual(mozillaclub.url, MozillaClub_FEED_URL)
         self.assertEqual(mozillaclub.origin, MozillaClub_FEED_URL)
         self.assertEqual(mozillaclub.tag, 'test')
-        self.assertIsInstance(mozillaclub.client, MozillaClubClient)
+        self.assertIsNone(mozillaclub.client)
 
         # When tag is empty or None it will be set to
         # the value in url
@@ -102,10 +99,10 @@ class TestMozillaClubBackend(unittest.TestCase):
         self.assertEqual(mozillaclub.origin, MozillaClub_FEED_URL)
         self.assertEqual(mozillaclub.tag, MozillaClub_FEED_URL)
 
-    def test_has_caching(self):
-        """Test if it returns True when has_caching is called"""
+    def test_has_archiving(self):
+        """Test if it returns True when has_archiving is called"""
 
-        self.assertEqual(MozillaClub.has_caching(), True)
+        self.assertEqual(MozillaClub.has_archiving(), True)
 
     def test_has_resuming(self):
         """Test if it returns False when has_resuming is called"""
@@ -184,53 +181,37 @@ class TestMozillaClubBackend(unittest.TestCase):
         self.assertEqual(len(events), 0)
 
 
-class TestMozillaClubBackendCache(unittest.TestCase):
-    """MozillaClub backend tests using a cache"""
+class TestMozillaClubBackendArchive(TestCaseBackendArchive):
+    """MozillaClub backend tests using an archive"""
 
     def setUp(self):
-        self.tmp_path = tempfile.mkdtemp(prefix='perceval_')
-
-    def tearDown(self):
-        shutil.rmtree(self.tmp_path)
+        super().setUp()
+        self.backend = MozillaClub(MozillaClub_FEED_URL, archive=self.archive)
 
     @httpretty.activate
-    def test_fetch_from_cache(self):
-        """Test whether the cache works"""
+    def test_fetch_from_archive(self):
+        """Test whether a list of events is returned from archive"""
 
-        http_requests = configure_http_server()
+        configure_http_server()
+        self._test_fetch_from_archive()
 
-        # First, we fetch the events from the server, storing them
-        # in a cache
-        cache = Cache(self.tmp_path)
-        mozillaclub = MozillaClub(MozillaClub_FEED_URL, cache=cache)
+    @httpretty.activate
+    def test_fetch_empty_from_archive(self):
+        """Test whether it works when no events are fetched from archive"""
 
-        events = [event for event in mozillaclub.fetch()]
-        self.assertEqual(len(http_requests), 1)
+        body = """
+                {
+                    "encoding": "UTF-8",
+                    "feed": {
+                    "event": []
+                    }
+                }
+            """
+        httpretty.register_uri(httpretty.GET,
+                               MozillaClub_FEED_URL,
+                               body=body, status=200)
 
-        # Now, we get the events from the cache.
-        # The contents should be the same and there won't be
-        # any new request to the server
-        cached_events = [event for event in mozillaclub.fetch_from_cache()]
-        self.assertEqual(len(cached_events), len(events))
-        for i in range(0, len(events)):
-            self.assertDictEqual(cached_events[i]['data'], events[i]['data'])
-        self.assertEqual(len(http_requests), 1)  # no more requests done
-
-    def test_fetch_from_empty_cache(self):
-        """Test if there are not any events returned when the cache is empty"""
-
-        cache = Cache(self.tmp_path)
-        mozillaclub = MozillaClub(MozillaClub_FEED_URL, cache=cache)
-        cached_events = [event for event in mozillaclub.fetch_from_cache()]
-        self.assertEqual(len(cached_events), 0)
-
-    def test_fetch_from_non_set_cache(self):
-        """Test if a error is raised when the cache was not set"""
-
-        mozillaclub = MozillaClub(MozillaClub_FEED_URL)
-
-        with self.assertRaises(CacheError):
-            _ = [event for event in mozillaclub.fetch_from_cache()]
+        self._test_fetch_from_archive()
 
 
 class TestMozillaClubCommand(unittest.TestCase):
@@ -249,12 +230,12 @@ class TestMozillaClubCommand(unittest.TestCase):
 
         args = [MozillaClub_FEED_URL,
                 '--tag', 'test',
-                '--no-cache']
+                '--no-archive']
 
         parsed_args = parser.parse(*args)
         self.assertEqual(parsed_args.url, MozillaClub_FEED_URL)
         self.assertEqual(parsed_args.tag, 'test')
-        self.assertEqual(parsed_args.no_cache, True)
+        self.assertEqual(parsed_args.no_archive, True)
 
 
 class TestMozillaClubClient(unittest.TestCase):

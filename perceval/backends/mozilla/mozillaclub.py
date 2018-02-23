@@ -27,10 +27,8 @@ from grimoirelab.toolkit.datetime import str_to_datetime
 
 from ...backend import (Backend,
                         BackendCommand,
-                        BackendCommandArgumentParser,
-                        metadata)
+                        BackendCommandArgumentParser)
 from ...client import HttpClient
-from ...errors import CacheError
 from ...utils import DEFAULT_DATETIME
 
 
@@ -69,18 +67,18 @@ class MozillaClub(Backend):
     This class retrieves the data from MozillaClub.
 
     :param url: Mozilla Club Events url
-    :param cache: cache object to store raw data
     :param tag: label used to mark the data
+    :param archive: archive to store/retrieve items
     """
-    version = '0.1.0'
+    version = '0.2.0'
 
-    def __init__(self, url=MOZILLA_CLUB_URL, cache=None, tag=None):
+    def __init__(self, url=MOZILLA_CLUB_URL, tag=None, archive=None):
         origin = url
         self.url = url
-        super().__init__(origin, tag=tag, cache=cache)
-        self.client = MozillaClubClient(url)
+        super().__init__(origin, tag=tag, archive=archive)
 
-    @metadata
+        self.client = None
+
     def fetch(self):
         """Fetch events from the MozillaClub URL.
 
@@ -90,55 +88,32 @@ class MozillaClub(Backend):
 
         :returns: a generator of events
         """
+        kwargs = {}
+        items = super().fetch("event", **kwargs)
+
+        return items
+
+    def fetch_items(self, **kwargs):
+        """Fetch events"""
+
         logger.info("Looking for events at url '%s'", self.url)
 
         nevents = 0  # number of events processed
 
-        self._purge_cache_queue()
-
         raw_cells = self.client.get_cells()
-        self._push_cache_queue(raw_cells)
         parser = MozillaClubParser(raw_cells)
 
         for event in parser.parse():
             yield event
             nevents += 1
 
-        self._flush_cache_queue()
-
         logger.info("Total number of events: %i", nevents)
 
-    @metadata
-    def fetch_from_cache(self):
-        """Fetch the events from the cache.
-
-        :returns: a generator of events
-
-        :raises CacheError: raised when an error occurs accessing the
-            cache
-        """
-        logger.info("Retrieving cached events: '%s'", self.url)
-
-        if not self.cache:
-            raise CacheError(cause="cache instance was not provided")
-
-        cache_items = next(self.cache.retrieve())
-
-        parser = MozillaClubParser(cache_items)
-
-        nevents = 0
-
-        for event in parser.parse():
-            yield event
-            nevents += 1
-
-        logger.info("Total number of events from cache: %i", nevents)
-
     @classmethod
-    def has_caching(cls):
-        """Returns whether it supports caching items on the fetch process.
+    def has_archiving(cls):
+        """Returns whether it supports archiving items on the fetch process.
 
-        :returns: this backend supports items cache
+        :returns: this backend supports items archive
         """
         return True
 
@@ -180,6 +155,11 @@ class MozillaClub(Backend):
         date = str_to_datetime(item['updated'])
         return float(date.timestamp())
 
+    def _init_client(self, from_archive=False):
+        """Init client"""
+
+        return MozillaClubClient(self.url, self.archive, from_archive)
+
 
 class MozillaClubClient(HttpClient):
     """MozillaClub API client.
@@ -188,11 +168,13 @@ class MozillaClubClient(HttpClient):
     projects in a MozillaClub site.
 
     :param url: URL of MozillaClub
+    :param archive: an archive to store/read fetched data
+    :param from_archive: it tells whether to write/read the archive
 
     :raises HTTPError: when an error occurs doing the request
     """
-    def __init__(self, url):
-        super().__init__(url)
+    def __init__(self, url, archive=None, from_archive=False):
+        super().__init__(url, archive=archive, from_archive=from_archive)
 
     def get_cells(self):
         """Retrieve all cells from the spreadsheet."""
@@ -360,7 +342,7 @@ class MozillaClubCommand(BackendCommand):
     def setup_cmd_parser():
         """Returns the MozillaClub argument parser."""
 
-        parser = BackendCommandArgumentParser(cache=True)
+        parser = BackendCommandArgumentParser(archive=True)
 
         # Required arguments
         parser.parser.add_argument('url', nargs='?',
