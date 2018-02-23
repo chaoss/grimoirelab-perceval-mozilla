@@ -23,20 +23,17 @@
 #
 
 import json
-import shutil
-import tempfile
 import unittest
 
 import httpretty
 import requests
 
 from perceval.backend import BackendCommandArgumentParser
-from perceval.cache import Cache
-from perceval.errors import CacheError
 
 from perceval.backends.mozilla.kitsune import (Kitsune,
                                                KitsuneCommand,
                                                KitsuneClient)
+from tests.base import TestCaseBackendArchive
 
 
 KITSUNE_SERVER_URL = 'http://example.com'
@@ -123,7 +120,7 @@ class TestKitsuneBackend(unittest.TestCase):
         self.assertEqual(kitsune.url, KITSUNE_SERVER_URL)
         self.assertEqual(kitsune.origin, KITSUNE_SERVER_URL)
         self.assertEqual(kitsune.tag, 'test')
-        self.assertIsInstance(kitsune.client, KitsuneClient)
+        self.assertIsNone(kitsune.client)
 
         # When tag is empty or None it will be set to
         # the value in url
@@ -137,10 +134,10 @@ class TestKitsuneBackend(unittest.TestCase):
         self.assertEqual(kitsune.origin, KITSUNE_SERVER_URL)
         self.assertEqual(kitsune.tag, KITSUNE_SERVER_URL)
 
-    def test_has_caching(self):
-        """Test if it returns True when has_caching is called"""
+    def test_has_archiving(self):
+        """Test if it returns True when has_archiving is called"""
 
-        self.assertEqual(Kitsune.has_caching(), True)
+        self.assertEqual(Kitsune.has_archiving(), True)
 
     def test_has_resuming(self):
         """Test if it returns True when has_resuming is called"""
@@ -178,7 +175,7 @@ class TestKitsuneBackend(unittest.TestCase):
         # Test fetch questions with their reviews
         kitsune = Kitsune(KITSUNE_SERVER_URL)
 
-        questions = [question for question in kitsune.fetch()]
+        questions = [question for question in kitsune.fetch(offset=None)]
 
         self.assertEqual(len(questions), 4)
 
@@ -240,56 +237,54 @@ class TestKitsuneBackend(unittest.TestCase):
         self.assertEqual(len(questions), 2)
 
 
-class TestKitsuneBackendCache(unittest.TestCase):
-    """Kitsune backend tests using a cache"""
+class TestKitsuneBackendArchive(TestCaseBackendArchive):
+    """Kitsune backend tests using an archive"""
 
     def setUp(self):
-        self.tmp_path = tempfile.mkdtemp(prefix='perceval_')
-
-    def tearDown(self):
-        shutil.rmtree(self.tmp_path)
+        super().setUp()
+        self.backend = Kitsune(KITSUNE_SERVER_URL, archive=self.archive)
 
     @httpretty.activate
-    def test_fetch_from_cache(self):
-        """Test whether the cache works"""
+    def test_fetch_from_archive(self):
+        """Test whether the questions are returned from archive"""
 
         HTTPServer.routes()
 
-        # First, we fetch the questions from the server, storing them
-        # in a cache
-        cache = Cache(self.tmp_path)
-        kitsune = Kitsune(KITSUNE_SERVER_URL, cache=cache)
+        self._test_fetch_from_archive()
 
-        questions = [event for event in kitsune.fetch()]
+    @httpretty.activate
+    def test_fetch_offset_from_archive_offset_0(self):
+        """Test whether the questions are returned offset from archive"""
 
-        requests_done = len(HTTPServer.requests_http)
+        HTTPServer.routes()
 
-        # Now, we get the questions from the cache.
-        # The contents should be the same and there won't be
-        # any new request to the server
-        cached_questions = [event for event in kitsune.fetch_from_cache()]
-        # No new requests to the server
-        self.assertEqual(len(HTTPServer.requests_http), requests_done)
-        # The contents should be the same
-        self.assertEqual(len(cached_questions), len(questions))
-        for i in range(0, len(questions)):
-            self.assertDictEqual(cached_questions[i]['data'], questions[i]['data'])
+        offset = 0
+        self._test_fetch_from_archive(offset=offset)
 
-    def test_fetch_from_empty_cache(self):
-        """Test if there are not any questions returned when the cache is empty"""
+    @httpretty.activate
+    def test_fetch_offset_from_archive_offset_2(self):
+        """Test whether the questions are returned offset from archive"""
 
-        cache = Cache(self.tmp_path)
-        kitsune = Kitsune(KITSUNE_SERVER_URL, cache=cache)
-        cached_questions = [event for event in kitsune.fetch_from_cache()]
-        self.assertEqual(len(cached_questions), 0)
+        HTTPServer.routes()
 
-    def test_fetch_from_non_set_cache(self):
-        """Test if a error is raised when the cache was not set"""
+        offset = 2
+        self._test_fetch_from_archive(offset=offset)
 
-        kitsune = Kitsune(KITSUNE_SERVER_URL)
+    @httpretty.activate
+    def test_fetch_offset_from_archive_offset_4(self):
+        """Test whether the questions are returned offset from archive"""
 
-        with self.assertRaises(CacheError):
-            _ = [event for event in kitsune.fetch_from_cache()]
+        HTTPServer.routes()
+
+        offset = 4
+        self._test_fetch_from_archive(offset=offset)
+
+    @httpretty.activate
+    def test_fetch_empty_from_archive(self):
+        """Test whether it works when no jobs are fetched from archive"""
+
+        HTTPServer.routes(empty=True)
+        self._test_fetch_from_archive()
 
 
 class TestKitsuneCommand(unittest.TestCase):
@@ -308,13 +303,13 @@ class TestKitsuneCommand(unittest.TestCase):
 
         args = [KITSUNE_SERVER_URL,
                 '--tag', 'test',
-                '--no-cache',
+                '--no-archive',
                 '--offset', '88']
 
         parsed_args = parser.parse(*args)
         self.assertEqual(parsed_args.url, KITSUNE_SERVER_URL)
         self.assertEqual(parsed_args.tag, 'test')
-        self.assertEqual(parsed_args.no_cache, True)
+        self.assertEqual(parsed_args.no_archive, True)
         self.assertEqual(parsed_args.offset, 88)
 
 
