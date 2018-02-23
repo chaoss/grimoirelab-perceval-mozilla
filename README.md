@@ -1,4 +1,4 @@
-# perceval-mozilla [![Build Status](https://travis-ci.org/grimoirelab/perceval-mozilla.svg?branch=master)](https://travis-ci.org/grimoirelab/perceval-mozilla) [![Coverage Status](https://img.shields.io/coveralls/grimoirelab/perceval-mozilla.svg)](https://coveralls.io/r/grimoirelab/perceval-mozilla?branch=master)
+# perceval-mozilla [![Build Status](https://travis-ci.org/chaoss/grimoirelab-perceval-mozilla.svg?branch=master)](https://travis-ci.org/chaos/grimoirelab-perceval-mozilla) [![Coverage Status](https://img.shields.io/coveralls/chaoss/grimoirelab-perceval-mozilla.svg)](https://coveralls.io/r/chaoss/grimoirelab-perceval-mozilla?branch=master)
 
 Bundle of Perceval backends for Mozilla ecosystem.
 
