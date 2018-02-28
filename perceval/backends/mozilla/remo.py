@@ -31,11 +31,14 @@ from ...backend import (Backend,
                         BackendCommandArgumentParser)
 from ...client import HttpClient
 
-
-logger = logging.getLogger(__name__)
-
 MOZILLA_REPS_URL = "https://reps.mozilla.org"
 REMO_DEFAULT_OFFSET = 0
+
+CATEGORY_EVENT = 'event'
+CATEGORY_ACTIVITY = 'activity'
+CATEGORY_USER = 'user'
+
+logger = logging.getLogger(__name__)
 
 
 class ReMo(Backend):
@@ -51,7 +54,7 @@ class ReMo(Backend):
     :param tag: label used to mark the data
     :param archive: archive to store/retrieve items
     """
-    version = '0.6.0'
+    version = '0.7.0'
 
     def __init__(self, url=None, tag=None, archive=None):
         if not url:
@@ -64,14 +67,14 @@ class ReMo(Backend):
 
         self.__users = {}  # internal users cache
 
-    def fetch(self, offset=REMO_DEFAULT_OFFSET, category='events'):
+    def fetch(self, category=CATEGORY_EVENT, offset=REMO_DEFAULT_OFFSET):
         """Fetch items from the ReMo url.
 
         The method retrieves, from a ReMo URL, the set of items
         of the given `category`.
 
-        :offset: obtain items after offset
-        :category: category of items to retrieve
+        :param category: the category of items to fetch
+        :param offset: obtain items after offset
         :returns: a generator of items
         """
         if not offset:
@@ -88,7 +91,7 @@ class ReMo(Backend):
 
         offset = kwargs['offset']
 
-        supported_categories = ['activities', 'events', 'users']
+        supported_categories = [CATEGORY_ACTIVITY, CATEGORY_EVENT, CATEGORY_USER]
 
         if self.category not in supported_categories:
             raise ValueError('ReMo perceval backend does not support ' + self.category)
@@ -197,11 +200,11 @@ class ReMo(Backend):
         for unique fields.
         """
         if 'estimated_attendance' in item:
-            category = 'event'
+            category = CATEGORY_EVENT
         elif 'activity' in item:
-            category = 'activity'
+            category = CATEGORY_ACTIVITY
         elif 'first_name' in item:
-            category = 'user'
+            category = CATEGORY_USER
         else:
             raise TypeError("Could not define the category of item " + str(item))
 
@@ -239,7 +242,7 @@ class ReMoClient(HttpClient):
         self.api_users_url = urijoin(self.base_url, ReMoClient.API_PATH + '/users/')
         self.api_users_url += '/'  # API needs a final /
 
-    def get_items(self, category='events', offset=REMO_DEFAULT_OFFSET):
+    def get_items(self, category=CATEGORY_EVENT, offset=REMO_DEFAULT_OFFSET):
         """Retrieve all items for category using pagination """
 
         more = True  # There are more items to be processed
@@ -247,11 +250,11 @@ class ReMoClient(HttpClient):
         page = ReMoClient.FIRST_PAGE
         page += int(offset / ReMoClient.ITEMS_PER_PAGE)
 
-        if category == 'events':
+        if category == CATEGORY_EVENT:
             api = self.api_events_url
-        elif category == 'activities':
+        elif category == CATEGORY_ACTIVITY:
             api = self.api_activities_url
-        elif category == 'users':
+        elif category == CATEGORY_USER:
             api = self.api_users_url
         else:
             raise ValueError(category + ' not supported in ReMo')

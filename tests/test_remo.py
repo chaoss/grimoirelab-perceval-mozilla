@@ -169,7 +169,7 @@ class TestReMoBackend(unittest.TestCase):
         self.assertEqual(items[3]['offset'], 3)
 
     @httpretty.activate
-    def __test_fetch(self, category='events'):
+    def __test_fetch(self, category='event'):
         """Test whether the events are returned"""
 
         items_page = ReMoClient.ITEMS_PER_PAGE
@@ -185,11 +185,11 @@ class TestReMoBackend(unittest.TestCase):
 
         self.assertEqual(len(items), items_page * pages)
 
-        if category == 'events':
+        if category == 'event':
             self.__check_events_contents(items)
-        elif category == 'users':
+        elif category == 'user':
             self.__check_users_contents(items)
-        elif category == 'activities':
+        elif category == 'activity':
             self.__check_activities_contents(items)
 
         # Check requests: page list, items, page list, items
@@ -206,13 +206,13 @@ class TestReMoBackend(unittest.TestCase):
             self.assertDictEqual(HTTPServer.requests_http[i].querystring, expected[i])
 
     def test_fetch_events(self):
-        self.__test_fetch(category='events')
+        self.__test_fetch(category='event')
 
     def test_fetch_activities(self):
-        self.__test_fetch(category='activities')
+        self.__test_fetch(category='activity')
 
     def test_fetch_users(self):
-        self.__test_fetch(category='users')
+        self.__test_fetch(category='user')
 
     @httpretty.activate
     def tests_wrong_metadata_updated_on(self):
@@ -223,7 +223,7 @@ class TestReMoBackend(unittest.TestCase):
         # Test fetch events with their reviews
         remo = ReMo(MOZILLA_REPS_SERVER_URL)
 
-        items = [page for page in remo.fetch(offset=None, category="events")]
+        items = [page for page in remo.fetch(offset=None, category="event")]
         item = items[0]
 
         item.pop('end', None)
@@ -240,7 +240,7 @@ class TestReMoBackend(unittest.TestCase):
         # Test fetch events with their reviews
         remo = ReMo(MOZILLA_REPS_SERVER_URL)
 
-        items = [page for page in remo.fetch(offset=None, category="events")]
+        items = [page for page in remo.fetch(offset=None, category="event")]
         item = items[0]
 
         item.pop('estimated_attendance', None)
@@ -297,20 +297,20 @@ class TestRemoBackendArchive(TestCaseBackendArchive):
         self.backend = ReMo(MOZILLA_REPS_SERVER_URL, archive=self.archive)
 
     @httpretty.activate
-    def __test_fetch_from_archive(self, category='events'):
+    def __test_fetch_from_archive(self, category='event'):
         """Test whether the events are returned from archive"""
 
         HTTPServer.routes()
         self._test_fetch_from_archive(category=category)
 
     def test_fetch_events(self):
-        self.__test_fetch_from_archive(category='events')
+        self.__test_fetch_from_archive(category='event')
 
     def test_fetch_activities(self):
-        self.__test_fetch_from_archive(category='activities')
+        self.__test_fetch_from_archive(category='activity')
 
     def test_fetch_users(self):
-        self.__test_fetch_from_archive(category='users')
+        self.__test_fetch_from_archive(category='user')
 
     @httpretty.activate
     def test_fetch_offset_from_archive_15(self):
@@ -349,14 +349,14 @@ class TestReMoCommand(unittest.TestCase):
         self.assertIsInstance(parser, BackendCommandArgumentParser)
 
         args = [MOZILLA_REPS_SERVER_URL,
-                '--category', 'users',
+                '--category', 'user',
                 '--tag', 'test',
                 '--no-archive',
                 '--offset', '88']
 
         parsed_args = parser.parse(*args)
         self.assertEqual(parsed_args.url, MOZILLA_REPS_SERVER_URL)
-        self.assertEqual(parsed_args.category, 'users')
+        self.assertEqual(parsed_args.category, 'user')
         self.assertEqual(parsed_args.tag, 'test')
         self.assertEqual(parsed_args.no_archive, True)
         self.assertEqual(parsed_args.offset, 88)
