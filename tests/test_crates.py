@@ -32,8 +32,8 @@ from perceval.backends.mozilla.crates import (Crates,
                                               CratesClient,
                                               CratesCommand,
                                               SLEEP_TIME,
-                                              CRATES_CATEGORY,
-                                              SUMMARY_CATEGORY)
+                                              CATEGORY_CRATES,
+                                              CATEGORY_SUMMARY)
 from perceval.utils import DEFAULT_DATETIME
 from tests.base import TestCaseBackendArchive
 
@@ -231,28 +231,28 @@ class TestCratesBackend(unittest.TestCase):
         self.assertEqual(len(items), 4)
 
         item = items[0]
-        self.assertEqual(item['category'], CRATES_CATEGORY)
+        self.assertEqual(item['category'], CATEGORY_CRATES)
         self.assertEqual(len(item['data']['owner_team_data']['teams']), 0)
         self.assertEqual(len(item['data']['owner_user_data']['users']), 1)
         self.assertEqual(len(item['data']['version_downloads_data']['version_downloads']), 2)
         self.assertEqual(len(item['data']['versions_data']['versions']), 1)
 
         item = items[1]
-        self.assertEqual(item['category'], CRATES_CATEGORY)
+        self.assertEqual(item['category'], CATEGORY_CRATES)
         self.assertEqual(len(item['data']['owner_team_data']['teams']), 1)
         self.assertEqual(len(item['data']['owner_user_data']['users']), 2)
         self.assertEqual(len(item['data']['version_downloads_data']), 0)
         self.assertEqual(len(item['data']['versions_data']['versions']), 5)
 
         item = items[2]
-        self.assertEqual(item['category'], CRATES_CATEGORY)
+        self.assertEqual(item['category'], CATEGORY_CRATES)
         self.assertEqual(len(item['data']['owner_team_data']['teams']), 1)
         self.assertEqual(len(item['data']['owner_user_data']['users']), 2)
         self.assertEqual(len(item['data']['version_downloads_data']), 0)
         self.assertEqual(len(item['data']['versions_data']['versions']), 1)
 
         item = items[3]
-        self.assertEqual(item['category'], CRATES_CATEGORY)
+        self.assertEqual(item['category'], CATEGORY_CRATES)
         self.assertEqual(len(item['data']['owner_team_data']['teams']), 1)
         self.assertEqual(len(item['data']['owner_user_data']['users']), 3)
         self.assertEqual(len(item['data']['version_downloads_data']), 0)
@@ -265,10 +265,10 @@ class TestCratesBackend(unittest.TestCase):
         setup_http_server()
 
         backend = Crates()
-        items = [items for items in backend.fetch(category=SUMMARY_CATEGORY)]
+        items = [items for items in backend.fetch(category=CATEGORY_SUMMARY)]
 
         self.assertEqual(len(items), 1)
-        self.assertEqual(items[0]['category'], SUMMARY_CATEGORY)
+        self.assertEqual(items[0]['category'], CATEGORY_SUMMARY)
         self.assertEqual(items[0]['data']['num_crates'], 10000)
         self.assertEqual(items[0]['data']['num_downloads'], 2000000000)
 
@@ -308,11 +308,11 @@ class TestCratesBackend(unittest.TestCase):
 
         backend = Crates()
         from_date = datetime.datetime(2016, 1, 1)
-        items = [items for items in backend.fetch(category=SUMMARY_CATEGORY,
+        items = [items for items in backend.fetch(category=CATEGORY_SUMMARY,
                                                   from_date=from_date)]
 
         self.assertEqual(len(items), 1)
-        self.assertEqual(items[0]['category'], SUMMARY_CATEGORY)
+        self.assertEqual(items[0]['category'], CATEGORY_SUMMARY)
         self.assertEqual(items[0]['data']['num_crates'], 10000)
         self.assertEqual(items[0]['data']['num_downloads'], 2000000000)
 
@@ -347,7 +347,7 @@ class TestCratesBackendArchive(TestCaseBackendArchive):
         """Test whether a summary is returned from archive"""
 
         setup_http_server()
-        items = [items for items in self.backend.fetch(category=SUMMARY_CATEGORY)]
+        items = [items for items in self.backend.fetch(category=CATEGORY_SUMMARY)]
         items_archived = [items for items in self.backend.fetch_from_archive()]
 
         self.assertEqual(len(items), len(items_archived))
@@ -376,7 +376,7 @@ class TestCratesBackendArchive(TestCaseBackendArchive):
         setup_http_server()
 
         from_date = datetime.datetime(2016, 1, 1)
-        items = [items for items in self.backend.fetch(category=SUMMARY_CATEGORY, from_date=from_date)]
+        items = [items for items in self.backend.fetch(category=CATEGORY_SUMMARY, from_date=from_date)]
         items_archived = [items for items in self.backend.fetch_from_archive()]
 
         self.assertEqual(len(items), len(items_archived))
@@ -464,7 +464,7 @@ class TestCratesCommand(unittest.TestCase):
         parsed_args = parser.parse(*args)
         self.assertEqual(parsed_args.tag, 'test')
         self.assertEqual(parsed_args.from_date, DEFAULT_DATETIME)
-        self.assertEqual(parsed_args.category, SUMMARY_CATEGORY)
+        self.assertEqual(parsed_args.category, CATEGORY_SUMMARY)
         self.assertEqual(parsed_args.sleep_time, 600)
 
         args = ['--tag', 'test',
