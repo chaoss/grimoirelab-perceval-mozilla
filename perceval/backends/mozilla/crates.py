@@ -56,7 +56,9 @@ class Crates(Backend):
     :param tag: label used to mark the data
     :param archive: archive to store/retrieve items
     """
-    version = '0.3.0'
+    version = '0.3.1'
+
+    CATEGORIES = [CATEGORY_CRATES, CATEGORY_SUMMARY]
 
     def __init__(self, sleep_time=SLEEP_TIME, tag=None, archive=None):
         origin = CRATES_URL
