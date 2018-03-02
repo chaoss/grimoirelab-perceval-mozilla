@@ -40,7 +40,7 @@ logger = logging.getLogger(__name__)
 KITSUNE_URL = "https://support.mozilla.org"
 DEFAULT_OFFSET = 0
 
-QUESTION_CATEGORY = "question"
+CATEGORY_QUESTION = "question"
 
 
 class Kitsune(Backend):
@@ -57,7 +57,9 @@ class Kitsune(Backend):
     :param tag: label used to mark the data
     :param archive: archive to store/retrieve items
     """
-    version = '0.6.0'
+    version = '0.6.1'
+
+    CATEGORIES = [CATEGORY_QUESTION]
 
     def __init__(self, url=None, tag=None, archive=None):
         if not url:
@@ -69,7 +71,7 @@ class Kitsune(Backend):
 
         self.client = None
 
-    def fetch(self, category=QUESTION_CATEGORY, offset=DEFAULT_OFFSET):
+    def fetch(self, category=CATEGORY_QUESTION, offset=DEFAULT_OFFSET):
         """Fetch questions from the Kitsune url.
 
         :param category: the category of items to fetch
@@ -210,7 +212,7 @@ class Kitsune(Backend):
         This backend only generates one type of item which is
         'question'.
         """
-        return QUESTION_CATEGORY
+        return CATEGORY_QUESTION
 
     def _init_client(self, from_archive=False):
         """Init client"""
