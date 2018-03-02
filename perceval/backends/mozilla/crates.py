@@ -39,8 +39,8 @@ from ...utils import DEFAULT_DATETIME
 CRATES_URL = "https://crates.io/"
 CRATES_API_URL = 'https://crates.io/api/v1/'
 
-CRATES_CATEGORY = 'crates'
-SUMMARY_CATEGORY = 'summary'
+CATEGORY_CRATES = 'crates'
+CATEGORY_SUMMARY = 'summary'
 
 SLEEP_TIME = 60
 
@@ -56,7 +56,7 @@ class Crates(Backend):
     :param tag: label used to mark the data
     :param archive: archive to store/retrieve items
     """
-    version = '0.2.0'
+    version = '0.3.0'
 
     def __init__(self, sleep_time=SLEEP_TIME, tag=None, archive=None):
         origin = CRATES_URL
@@ -66,13 +66,13 @@ class Crates(Backend):
 
         self.client = None
 
-    def fetch(self, from_date=DEFAULT_DATETIME, category=CRATES_CATEGORY):
+    def fetch(self, category=CATEGORY_CRATES, from_date=DEFAULT_DATETIME):
         """Fetch package data.
 
         The method retrieves packages and summary from Crates.io.
 
+        :param category: the category of items to fetch
         :param from_date: obtain packages updated since this date
-        :param category: select the category to fetch (crates or summary)
 
         :returns: a summary and crate items
         """
@@ -93,7 +93,7 @@ class Crates(Backend):
 
         from_date = kwargs['from_date']
 
-        if self.category == CRATES_CATEGORY:
+        if self.category == CATEGORY_CRATES:
             return self.__fetch_crates(from_date)
         else:
             return self.__fetch_summary()
@@ -118,7 +118,7 @@ class Crates(Backend):
     def metadata_id(item):
         """Extracts the identifier from an item depending on its type."""
 
-        if Crates.metadata_category(item) == CRATES_CATEGORY:
+        if Crates.metadata_category(item) == CATEGORY_CRATES:
             return str(item['id'])
         else:
             ts = item['fetched_on']
@@ -137,7 +137,7 @@ class Crates(Backend):
 
         :returns: a UNIX timestamp
         """
-        if Crates.metadata_category(item) == CRATES_CATEGORY:
+        if Crates.metadata_category(item) == CATEGORY_CRATES:
             ts = item['updated_at']
         else:
             ts = item['fetched_on']
@@ -153,9 +153,9 @@ class Crates(Backend):
         This backend generates two types of item: 'summary' and 'crate'.
         """
         if 'num_downloads' in item:
-            return SUMMARY_CATEGORY
+            return CATEGORY_SUMMARY
         else:
-            return CRATES_CATEGORY
+            return CATEGORY_CRATES
 
     def _init_client(self, from_archive=False):
         """Init client"""
@@ -262,7 +262,7 @@ class CratesClient(HttpClient):
     def summary(self):
         """Get Crates.io summary"""
 
-        path = urijoin(CRATES_API_URL, SUMMARY_CATEGORY)
+        path = urijoin(CRATES_API_URL, CATEGORY_SUMMARY)
         raw_content = self.fetch(path)
 
         return raw_content
@@ -270,7 +270,7 @@ class CratesClient(HttpClient):
     def crates(self, from_page=1):
         """Get crates in alphabetical order"""
 
-        path = urijoin(CRATES_API_URL, CRATES_CATEGORY)
+        path = urijoin(CRATES_API_URL, CATEGORY_CRATES)
         raw_crates = self.__fetch_items(path, from_page)
 
         return raw_crates
@@ -278,7 +278,7 @@ class CratesClient(HttpClient):
     def crate(self, crate_id):
         """Get a crate by its ID"""
 
-        path = urijoin(CRATES_API_URL, CRATES_CATEGORY, crate_id)
+        path = urijoin(CRATES_API_URL, CATEGORY_CRATES, crate_id)
         raw_crate = self.fetch(path)
 
         return raw_crate
@@ -286,7 +286,7 @@ class CratesClient(HttpClient):
     def crate_attribute(self, crate_id, attribute):
         """Get crate attribute"""
 
-        path = urijoin(CRATES_API_URL, CRATES_CATEGORY, crate_id, attribute)
+        path = urijoin(CRATES_API_URL, CATEGORY_CRATES, crate_id, attribute)
         raw_attribute_data = self.fetch(path)
 
         return raw_attribute_data

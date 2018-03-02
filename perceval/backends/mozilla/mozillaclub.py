@@ -31,9 +31,6 @@ from ...backend import (Backend,
 from ...client import HttpClient
 from ...utils import DEFAULT_DATETIME
 
-
-logger = logging.getLogger(__name__)
-
 MOZILLA_CLUB_URL = \
     "https://spreadsheets.google.com/feeds/cells/1QHl2bjBhMslyFzR5XXPzMLdzzx7oeSKTbgR5PM8qp64/ohaibtm/public/values?alt=json"
 
@@ -60,6 +57,10 @@ EVENT_TEMPLATE = {
     20: "Event Cover Photo"
 }
 
+CATEGORY_EVENT = 'event'
+
+logger = logging.getLogger(__name__)
+
 
 class MozillaClub(Backend):
     """MozillaClub backend for Perceval.
@@ -70,7 +71,7 @@ class MozillaClub(Backend):
     :param tag: label used to mark the data
     :param archive: archive to store/retrieve items
     """
-    version = '0.2.0'
+    version = '0.3.0'
 
     def __init__(self, url=MOZILLA_CLUB_URL, tag=None, archive=None):
         origin = url
@@ -79,17 +80,19 @@ class MozillaClub(Backend):
 
         self.client = None
 
-    def fetch(self):
+    def fetch(self, category=CATEGORY_EVENT):
         """Fetch events from the MozillaClub URL.
 
         The method retrieves, from a MozillaClub URL, the
         events. The data is a Google spreadsheet retrieved using
         the feed API REST.
 
+        :param category: the category of items to fetch
+
         :returns: a generator of events
         """
         kwargs = {}
-        items = super().fetch("event", **kwargs)
+        items = super().fetch(category, **kwargs)
 
         return items
 
@@ -138,7 +141,7 @@ class MozillaClub(Backend):
         This backend only generates one type of item which is
         'event'.
         """
-        return 'event'
+        return CATEGORY_EVENT
 
     @staticmethod
     def metadata_updated_on(item):
