@@ -71,7 +71,9 @@ class MozillaClub(Backend):
     :param tag: label used to mark the data
     :param archive: archive to store/retrieve items
     """
-    version = '0.3.0'
+    version = '0.3.1'
+
+    CATEGORIES = [CATEGORY_EVENT]
 
     def __init__(self, url=MOZILLA_CLUB_URL, tag=None, archive=None):
         origin = url
