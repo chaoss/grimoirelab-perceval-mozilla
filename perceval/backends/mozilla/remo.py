@@ -54,7 +54,9 @@ class ReMo(Backend):
     :param tag: label used to mark the data
     :param archive: archive to store/retrieve items
     """
-    version = '0.7.0'
+    version = '0.7.1'
+
+    CATEGORIES = [CATEGORY_ACTIVITY, CATEGORY_EVENT, CATEGORY_USER]
 
     def __init__(self, url=None, tag=None, archive=None):
         if not url:
@@ -90,11 +92,6 @@ class ReMo(Backend):
         """Fetch items"""
 
         offset = kwargs['offset']
-
-        supported_categories = [CATEGORY_ACTIVITY, CATEGORY_EVENT, CATEGORY_USER]
-
-        if self.category not in supported_categories:
-            raise ValueError('ReMo perceval backend does not support ' + self.category)
 
         logger.info("Looking for events at url '%s' of %s category and %i offset",
                     self.url, self.category, offset)

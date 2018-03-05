@@ -27,7 +27,7 @@ import unittest
 
 import httpretty
 
-from perceval.backend import BackendCommandArgumentParser
+from perceval.backend import BackendError, BackendCommandArgumentParser
 from perceval.backends.mozilla.remo import (ReMo,
                                             ReMoCommand,
                                             ReMoClient,
@@ -274,7 +274,7 @@ class TestReMoBackend(unittest.TestCase):
         self.assertEqual(uuid_17_1, uuid_17_2)
 
     def test_fetch_wrong_category(self):
-        with self.assertRaises(ValueError):
+        with self.assertRaises(BackendError):
             self.__test_fetch(category='wrong')
 
     @httpretty.activate
