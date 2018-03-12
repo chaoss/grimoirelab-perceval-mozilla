@@ -294,7 +294,8 @@ class TestRemoBackendArchive(TestCaseBackendArchive):
 
     def setUp(self):
         super().setUp()
-        self.backend = ReMo(MOZILLA_REPS_SERVER_URL, archive=self.archive)
+        self.backend_write_archive = ReMo(MOZILLA_REPS_SERVER_URL, archive=self.archive)
+        self.backend_read_archive = ReMo(MOZILLA_REPS_SERVER_URL, archive=self.archive)
 
     @httpretty.activate
     def __test_fetch_from_archive(self, category='event'):
