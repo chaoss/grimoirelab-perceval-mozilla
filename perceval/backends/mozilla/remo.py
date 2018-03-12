@@ -54,7 +54,7 @@ class ReMo(Backend):
     :param tag: label used to mark the data
     :param archive: archive to store/retrieve items
     """
-    version = '0.7.1'
+    version = '0.7.2'
 
     CATEGORIES = [CATEGORY_ACTIVITY, CATEGORY_EVENT, CATEGORY_USER]
 
@@ -83,18 +83,22 @@ class ReMo(Backend):
             offset = REMO_DEFAULT_OFFSET
 
         kwargs = {"offset": offset}
-        self.category = category
         items = super().fetch(category, **kwargs)
 
         return items
 
-    def fetch_items(self, **kwargs):
-        """Fetch items"""
+    def fetch_items(self, category, **kwargs):
+        """Fetch items
 
+        :param category: the category of items to fetch
+        :param kwargs: backend arguments
+
+        :returns: a generator of items
+        """
         offset = kwargs['offset']
 
         logger.info("Looking for events at url '%s' of %s category and %i offset",
-                    self.url, self.category, offset)
+                    self.url, category, offset)
 
         nitems = 0  # number of items processed
         titems = 0  # number of items from API data
@@ -109,7 +113,7 @@ class ReMo(Backend):
                      drop_items, offset, page, page_offset)
         current_offset = offset
 
-        for raw_items in self.client.get_items(self.category, offset):
+        for raw_items in self.client.get_items(category, offset):
             items_data = json.loads(raw_items)
             titems = items_data['count']
             logger.info("Pending items to retrieve: %i, %i current offset",
