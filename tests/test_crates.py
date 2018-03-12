@@ -333,7 +333,8 @@ class TestCratesBackendArchive(TestCaseBackendArchive):
 
     def setUp(self):
         super().setUp()
-        self.backend = Crates(archive=self.archive)
+        self.backend_write_archive = Crates(archive=self.archive)
+        self.backend_read_archive = Crates(archive=self.archive)
 
     @httpretty.activate
     def test_fetch_crates_from_archive(self):
@@ -347,8 +348,8 @@ class TestCratesBackendArchive(TestCaseBackendArchive):
         """Test whether a summary is returned from archive"""
 
         setup_http_server()
-        items = [items for items in self.backend.fetch(category=CATEGORY_SUMMARY)]
-        items_archived = [items for items in self.backend.fetch_from_archive()]
+        items = [items for items in self.backend_write_archive.fetch(category=CATEGORY_SUMMARY)]
+        items_archived = [items for items in self.backend_read_archive.fetch_from_archive()]
 
         self.assertEqual(len(items), len(items_archived))
 
@@ -376,8 +377,8 @@ class TestCratesBackendArchive(TestCaseBackendArchive):
         setup_http_server()
 
         from_date = datetime.datetime(2016, 1, 1)
-        items = [items for items in self.backend.fetch(category=CATEGORY_SUMMARY, from_date=from_date)]
-        items_archived = [items for items in self.backend.fetch_from_archive()]
+        items = [items for items in self.backend_write_archive.fetch(category=CATEGORY_SUMMARY, from_date=from_date)]
+        items_archived = [items for items in self.backend_read_archive.fetch_from_archive()]
 
         self.assertEqual(len(items), len(items_archived))
 
