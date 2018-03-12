@@ -71,7 +71,7 @@ class MozillaClub(Backend):
     :param tag: label used to mark the data
     :param archive: archive to store/retrieve items
     """
-    version = '0.3.1'
+    version = '0.3.2'
 
     CATEGORIES = [CATEGORY_EVENT]
 
@@ -98,9 +98,14 @@ class MozillaClub(Backend):
 
         return items
 
-    def fetch_items(self, **kwargs):
-        """Fetch events"""
+    def fetch_items(self, category, **kwargs):
+        """Fetch events
 
+        :param category: the category of items to fetch
+        :param kwargs: backend arguments
+
+        :returns: a generator of items
+        """
         logger.info("Looking for events at url '%s'", self.url)
 
         nevents = 0  # number of events processed

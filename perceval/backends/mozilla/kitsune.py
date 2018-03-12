@@ -57,7 +57,7 @@ class Kitsune(Backend):
     :param tag: label used to mark the data
     :param archive: archive to store/retrieve items
     """
-    version = '0.6.1'
+    version = '0.6.2'
 
     CATEGORIES = [CATEGORY_QUESTION]
 
@@ -86,9 +86,14 @@ class Kitsune(Backend):
 
         return items
 
-    def fetch_items(self, **kwargs):
-        """Fetch questions from the Kitsune url"""
+    def fetch_items(self, category, **kwargs):
+        """Fetch questions from the Kitsune url
 
+        :param category: the category of items to fetch
+        :param kwargs: backend arguments
+
+        :returns: a generator of items
+        """
         offset = kwargs['offset']
 
         logger.info("Looking for questions at url '%s' using offset %s",
