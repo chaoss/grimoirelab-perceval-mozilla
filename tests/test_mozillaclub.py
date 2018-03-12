@@ -186,7 +186,8 @@ class TestMozillaClubBackendArchive(TestCaseBackendArchive):
 
     def setUp(self):
         super().setUp()
-        self.backend = MozillaClub(MozillaClub_FEED_URL, archive=self.archive)
+        self.backend_write_archive = MozillaClub(MozillaClub_FEED_URL, archive=self.archive)
+        self.backend_read_archive = MozillaClub(MozillaClub_FEED_URL, archive=self.archive)
 
     @httpretty.activate
     def test_fetch_from_archive(self):
