@@ -56,7 +56,7 @@ class Crates(Backend):
     :param tag: label used to mark the data
     :param archive: archive to store/retrieve items
     """
-    version = '0.3.1'
+    version = '0.3.2'
 
     CATEGORIES = [CATEGORY_CRATES, CATEGORY_SUMMARY]
 
@@ -84,18 +84,21 @@ class Crates(Backend):
         from_date = datetime_to_utc(from_date)
 
         kwargs = {"from_date": from_date}
-
-        self.category = category
         items = super().fetch(category, **kwargs)
 
         return items
 
-    def fetch_items(self, **kwargs):
-        """Fetch packages and summary from Crates.io"""
+    def fetch_items(self, category, **kwargs):
+        """Fetch packages and summary from Crates.io
 
+        :param category: the category of items to fetch
+        :param kwargs: backend arguments
+
+        :returns: a generator of items
+        """
         from_date = kwargs['from_date']
 
-        if self.category == CATEGORY_CRATES:
+        if category == CATEGORY_CRATES:
             return self.__fetch_crates(from_date)
         else:
             return self.__fetch_summary()
