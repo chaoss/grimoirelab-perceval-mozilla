@@ -32,7 +32,7 @@ from perceval.backends.mozilla.remo import (ReMo,
                                             ReMoCommand,
                                             ReMoClient,
                                             MOZILLA_REPS_URL)
-from tests.base import TestCaseBackendArchive
+from base import TestCaseBackendArchive
 
 MOZILLA_REPS_SERVER_URL = 'http://example.com'
 MOZILLA_REPS_API = MOZILLA_REPS_SERVER_URL + '/api/remo/v1'

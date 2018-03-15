@@ -31,7 +31,7 @@ from perceval.backends.mozilla.mozillaclub import (MozillaClub,
                                                    MozillaClubCommand,
                                                    MozillaClubClient,
                                                    MozillaClubParser)
-from tests.base import TestCaseBackendArchive
+from base import TestCaseBackendArchive
 
 
 MozillaClub_FEED_URL = 'http://example.com/feed'
