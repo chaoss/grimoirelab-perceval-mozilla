@@ -35,7 +35,7 @@ from perceval.backends.mozilla.crates import (Crates,
                                               CATEGORY_CRATES,
                                               CATEGORY_SUMMARY)
 from perceval.utils import DEFAULT_DATETIME
-from tests.base import TestCaseBackendArchive
+from base import TestCaseBackendArchive
 
 CRATES_API_URL = "https://crates.io/api/v1/"
 
