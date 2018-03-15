@@ -33,7 +33,7 @@ from perceval.backend import BackendCommandArgumentParser
 from perceval.backends.mozilla.kitsune import (Kitsune,
                                                KitsuneCommand,
                                                KitsuneClient)
-from tests.base import TestCaseBackendArchive
+from base import TestCaseBackendArchive
 
 
 KITSUNE_SERVER_URL = 'http://example.com'
