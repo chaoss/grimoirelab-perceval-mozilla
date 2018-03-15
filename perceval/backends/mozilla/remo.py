@@ -22,6 +22,7 @@
 
 import json
 import logging
+import urllib.parse
 
 from grimoirelab.toolkit.datetime import str_to_datetime
 from grimoirelab.toolkit.uris import urijoin
@@ -54,7 +55,7 @@ class ReMo(Backend):
     :param tag: label used to mark the data
     :param archive: archive to store/retrieve items
     """
-    version = '0.7.2'
+    version = '0.7.3'
 
     CATEGORIES = [CATEGORY_ACTIVITY, CATEGORY_EVENT, CATEGORY_USER]
 
@@ -262,7 +263,8 @@ class ReMoClient(HttpClient):
 
         while more:
             params = {
-                "page": page
+                "page": page,
+                "orderby": "ASC"
             }
 
             logger.debug("ReMo client calls APIv2: %s params: %s",
@@ -277,8 +279,10 @@ class ReMoClient(HttpClient):
             if not next_uri:
                 more = False
             else:
-                # https://reps.mozilla.org/remo/api/remo/v1/events/?page=269
-                page = next_uri.split("page=")[1]
+                # https://reps.mozilla.org/remo/api/remo/v1/events/?orderby=ASC&page=269
+                parsed_uri = urllib.parse.urlparse(next_uri)
+                parsed_params = urllib.parse.parse_qs(parsed_uri.query)
+                page = parsed_params['page'][0]
 
     def fetch(self, url, payload=None):
         """Return the textual content associated to the Response object"""
