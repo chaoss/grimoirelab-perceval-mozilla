@@ -24,8 +24,11 @@
 
 import codecs
 import os.path
+import sys
+import pkg_resources
+import unittest
 
-from setuptools import setup
+from setuptools import setup, Command
 
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -47,6 +50,27 @@ except (IOError, ImportError):
 
 version = '0.1.9'
 
+
+class TestCommand(Command):
+
+    user_options = []
+    __dir__ = os.path.dirname(os.path.realpath(__file__))
+
+    def initialize_options(self):
+        os.chdir(os.path.join(self.__dir__, 'tests'))
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        # To ensure it gets Perceval from the right directory, set first position of sys.path
+        sys.path.insert(0, pkg_resources.get_distribution("perceval").location)
+        test_suite = unittest.TestLoader().discover('.', pattern='test*.py')
+        result = unittest.TextTestRunner(buffer=True).run(test_suite)
+        sys.exit(not result.wasSuccessful())
+
+
+cmdclass = {'test': TestCommand}
 
 setup(name="perceval-mozilla",
       description="Bundle of Perceval backends for Mozilla ecosystem",
@@ -74,4 +98,5 @@ setup(name="perceval-mozilla",
           'grimoirelab-toolkit>=0.1.0',
           'perceval>=0.9.11'
       ],
+      cmdclass=cmdclass,
       zip_safe=False)
