@@ -193,10 +193,10 @@ class TestReMoBackend(unittest.TestCase):
             self.__check_activities_contents(items)
 
         # Check requests: page list, items, page list, items
-        expected = [{'page': ['1']}]
+        expected = [{'page': ['1'], 'orderby': ['ASC']}]
         for i in range(0, items_page):
             expected += [{}]
-        expected += [{'page': ['2']}]
+        expected += [{'page': ['2'], 'orderby': ['ASC']}]
         for i in range(0, items_page):
             expected += [{}]
 
@@ -389,12 +389,8 @@ class TestReMoClient(unittest.TestCase):
         req = HTTPServer.requests_http[-1]
         self.assertEqual(response, body)
         self.assertEqual(req.method, 'GET')
-        self.assertEqual(req.path, '/api/remo/v1/events/?page=1')
-        # Check request params
-        expected = {
-            'page': ['1']
-        }
-        self.assertDictEqual(req.querystring, expected)
+        self.assertRegex(req.path, '/api/remo/v1/events/')
+        self.assertDictEqual(req.querystring, {'page': ['1'], 'orderby': ['ASC']})
 
     @httpretty.activate
     def test_get_wrong_items(self):
