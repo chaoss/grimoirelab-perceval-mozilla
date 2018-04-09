@@ -71,7 +71,7 @@ class MozillaClub(Backend):
     :param tag: label used to mark the data
     :param archive: archive to store/retrieve items
     """
-    version = '0.3.2'
+    version = '0.3.3'
 
     CATEGORIES = [CATEGORY_EVENT]
 
@@ -286,7 +286,7 @@ class MozillaClubParser:
             event = self.__get_next_event(event_fields)
 
             if event['Date of Event'] is None or event['Club Name'] is None:
-                logger.error("Wrong event data: %s", event)
+                logger.warning("Wrong event data: %s", event)
                 nevents_wrong += 1
                 continue
             yield event
