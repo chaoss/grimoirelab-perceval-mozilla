@@ -1,5 +1,6 @@
+# -*- coding: utf-8 -*-
 #
-# Copyright (C) 2015-2017 Bitergia
+# Copyright (C) 2015-2018 Bitergia
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,11 +20,4 @@
 #     Santiago Dueñas <sduenas@bitergia.com>
 #
 
-import logging
-
-from ._version import __version__
-from .backend import find_backends
-
-__all__ = [__version__, find_backends]
-
-logging.getLogger(__name__).addHandler(logging.NullHandler())
+__import__('pkg_resources').declare_namespace(__name__)
