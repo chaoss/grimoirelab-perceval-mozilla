@@ -48,7 +48,7 @@ except (IOError, ImportError):
         long_description = f.read()
 
 
-version = '0.1.12'
+version = '0.1.13'
 
 
 class TestCommand(Command):
