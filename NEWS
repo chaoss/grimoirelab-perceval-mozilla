@@ -1,5 +1,13 @@
 # Releases
 
+## perceval-mozilla 0.2 - (2018-05-21)
+
+** New features improvements: **
+
+ * Backends updated to be compatible with Perceval 0.11.
+ * Creates backend added.
+
+
 ## perceval-mozilla 0.1 - (2017-01-19)
 
 ** New features and improvements: **
