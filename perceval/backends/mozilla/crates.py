@@ -25,10 +25,10 @@ import logging
 
 import requests
 
-from grimoirelab.toolkit.datetime import (datetime_utcnow,
+from grimoirelab_toolkit.datetime import (datetime_utcnow,
                                           datetime_to_utc,
                                           str_to_datetime)
-from grimoirelab.toolkit.uris import urijoin
+from grimoirelab_toolkit.uris import urijoin
 
 from ...backend import (Backend,
                         BackendCommand,
