@@ -25,10 +25,10 @@
 import codecs
 import os.path
 import sys
-import pkg_resources
 import unittest
 
-from setuptools import setup, Command
+from setuptools import setup
+from setuptools.command.test import test as TestClass
 
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -48,24 +48,19 @@ except (IOError, ImportError):
         long_description = f.read()
 
 
-version = '0.2.1'
+version = '0.2.2'
 
 
-class TestCommand(Command):
-
+class TestCommand(TestClass):
     user_options = []
     __dir__ = os.path.dirname(os.path.realpath(__file__))
 
     def initialize_options(self):
-        os.chdir(os.path.join(self.__dir__, 'tests'))
+        super().initialize_options()
+        sys.path.insert(0, os.path.join(self.__dir__, 'tests'))
 
-    def finalize_options(self):
-        pass
-
-    def run(self):
-        # To ensure it gets Perceval from the right directory, set first position of sys.path
-        sys.path.insert(0, pkg_resources.get_distribution("perceval").location)
-        test_suite = unittest.TestLoader().discover('.', pattern='test*.py')
+    def run_tests(self):
+        test_suite = unittest.TestLoader().discover('.', pattern='test_*.py')
         result = unittest.TextTestRunner(buffer=True).run(test_suite)
         sys.exit(not result.wasSuccessful())
 
@@ -96,6 +91,13 @@ setup(name="perceval-mozilla",
       namespace_packages=[
           'perceval',
           'perceval.backends'
+      ],
+      setup_requires=[
+          'wheel',
+          'pandoc'
+      ],
+      tests_require=[
+          'httpretty==0.8.6'
       ],
       install_requires=[
           'requests>=2.7.0',
