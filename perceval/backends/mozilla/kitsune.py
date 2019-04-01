@@ -57,7 +57,7 @@ class Kitsune(Backend):
     :param tag: label used to mark the data
     :param archive: archive to store/retrieve items
     """
-    version = '0.6.2'
+    version = '0.6.3'
 
     CATEGORIES = [CATEGORY_QUESTION]
 
@@ -122,7 +122,7 @@ class Kitsune(Backend):
                 # Continue with the next page if it is a 500 error
                 if e.response.status_code == 500:
                     logger.exception(e)
-                    logger.error("Problem getting Kitsune questions. " +
+                    logger.error("Problem getting Kitsune questions. "
                                  "Loosing %i questions. Going to the next page.",
                                  KitsuneClient.ITEMS_PER_PAGE)
                     equestions += KitsuneClient.ITEMS_PER_PAGE
@@ -161,15 +161,16 @@ class Kitsune(Backend):
         logger.info("Total number of questions: %i (%i total)", nquestions, tquestions)
         logger.info("Questions with errors dropped: %i", equestions)
 
-    def metadata(self, item):
+    def metadata(self, item, filter_classified=False):
         """Kitsune metadata.
 
         This method takes items overrides `metadata` method to add extra
         information related to Kitsune (offset of the question).
 
         :param item: an item fetched by a backend
+        :param filter_classified: sets if classified fields were filtered
         """
-        item = super().metadata(item)
+        item = super().metadata(item, filter_classified=filter_classified)
         item['offset'] = item['data'].pop('offset')
 
         return item
