@@ -55,7 +55,7 @@ class ReMo(Backend):
     :param tag: label used to mark the data
     :param archive: archive to store/retrieve items
     """
-    version = '0.7.3'
+    version = '0.7.4'
 
     CATEGORIES = [CATEGORY_ACTIVITY, CATEGORY_EVENT, CATEGORY_USER]
 
@@ -134,15 +134,16 @@ class ReMo(Backend):
 
         logger.info("Total number of events: %i (%i total, %i offset)", nitems, titems, offset)
 
-    def metadata(self, item):
+    def metadata(self, item, filter_classified=False):
         """ReMo metadata.
 
         This method takes items overrides `metadata` method to add extra
-        information related to Kitsune (offset of the item).
+        information related to Remo (offset of the item).
 
         :param item: an item fetched by a backend
+        :param filter_classified: sets if classified fields were filtered
         """
-        item = super().metadata(item)
+        item = super().metadata(item, filter_classified=filter_classified)
         item['offset'] = item['data'].pop('offset')
 
         return item
