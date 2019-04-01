@@ -42,7 +42,7 @@ try:
     import pypandoc
     long_description = pypandoc.convert(readme_md, 'rst')
 except (IOError, ImportError):
-    print("Warning: pypandoc module not found, or pandoc not installed. " +
+    print("Warning: pypandoc module not found, or pandoc not installed. "
           "Using md instead of rst")
     with codecs.open(readme_md, encoding='utf-8') as f:
         long_description = f.read()
@@ -102,7 +102,7 @@ setup(name="perceval-mozilla",
       install_requires=[
           'requests>=2.7.0',
           'grimoirelab-toolkit>=0.1.0',
-          'perceval>=0.11.0'
+          'perceval>=0.12.8'
       ],
       cmdclass=cmdclass,
       zip_safe=False)
