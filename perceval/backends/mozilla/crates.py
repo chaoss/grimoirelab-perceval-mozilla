@@ -339,11 +339,12 @@ class CratesCommand(BackendCommand):
 
     BACKEND = Crates
 
-    @staticmethod
-    def setup_cmd_parser():
+    @classmethod
+    def setup_cmd_parser(cls):
         """Returns the Crates argument parser."""
 
-        parser = BackendCommandArgumentParser(from_date=True,
+        parser = BackendCommandArgumentParser(cls.BACKEND.CATEGORIES,
+                                              from_date=True,
                                               archive=True,
                                               token_auth=True)
 

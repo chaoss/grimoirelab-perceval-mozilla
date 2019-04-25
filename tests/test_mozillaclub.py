@@ -228,6 +228,7 @@ class TestMozillaClubCommand(unittest.TestCase):
 
         parser = MozillaClubCommand.setup_cmd_parser()
         self.assertIsInstance(parser, BackendCommandArgumentParser)
+        self.assertEqual(parser._categories, MozillaClub.CATEGORIES)
 
         args = [MozillaClub_FEED_URL,
                 '--tag', 'test',

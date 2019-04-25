@@ -301,6 +301,7 @@ class TestKitsuneCommand(unittest.TestCase):
 
         parser = KitsuneCommand.setup_cmd_parser()
         self.assertIsInstance(parser, BackendCommandArgumentParser)
+        self.assertEqual(parser._categories, Kitsune.CATEGORIES)
 
         args = [KITSUNE_SERVER_URL,
                 '--tag', 'test',
