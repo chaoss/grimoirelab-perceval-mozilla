@@ -456,6 +456,7 @@ class TestCratesCommand(unittest.TestCase):
 
         parser = CratesCommand.setup_cmd_parser()
         self.assertIsInstance(parser, BackendCommandArgumentParser)
+        self.assertEqual(parser._categories, Crates.CATEGORIES)
 
         args = ['--tag', 'test',
                 '--from-date', '1970-01-01',
