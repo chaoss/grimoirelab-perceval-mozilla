@@ -102,7 +102,7 @@ setup(name="perceval-mozilla",
       install_requires=[
           'requests>=2.7.0',
           'grimoirelab-toolkit>=0.1.0',
-          'perceval>=0.12.8'
+          'perceval>=0.12.12'
       ],
       cmdclass=cmdclass,
       zip_safe=False)
