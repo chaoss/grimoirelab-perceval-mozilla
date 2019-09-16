@@ -204,6 +204,23 @@ class TestReMoBackend(unittest.TestCase):
         for i in range(len(expected)):
             self.assertDictEqual(HTTPServer.requests_http[i].querystring, expected[i])
 
+    @httpretty.activate
+    def __test_search_terms(self, category='event'):
+        """Test whether the search_fields is properly set"""
+
+        items_page = ReMoClient.ITEMS_PER_PAGE
+        pages = 2  # two pages of testing data
+
+        HTTPServer.routes()
+
+        # Test fetch events with their reviews
+        remo = ReMo(MOZILLA_REPS_SERVER_URL)
+
+        items = [page for page in remo.fetch(offset=None, category=category)]
+
+        for item in items:
+            self.assertEqual(remo.metadata_id(item['data']), item['search_fields']['item_id'])
+
     def test_fetch_events(self):
         self.__test_fetch(category='event')
 
@@ -212,6 +229,15 @@ class TestReMoBackend(unittest.TestCase):
 
     def test_fetch_users(self):
         self.__test_fetch(category='user')
+
+    def test_search_terms_events(self):
+        self.__test_search_terms(category='event')
+
+    def test_search_terms_activities(self):
+        self.__test_search_terms(category='activity')
+
+    def test_search_terms_users(self):
+        self.__test_search_terms(category='user')
 
     @httpretty.activate
     def tests_wrong_metadata_updated_on(self):

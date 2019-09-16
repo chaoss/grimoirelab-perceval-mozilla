@@ -54,7 +54,7 @@ class ReMo(Backend):
     :param tag: label used to mark the data
     :param archive: archive to store/retrieve items
     """
-    version = '0.7.4'
+    version = '0.8.0'
 
     CATEGORIES = [CATEGORY_ACTIVITY, CATEGORY_EVENT, CATEGORY_USER]
 
