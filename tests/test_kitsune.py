@@ -235,6 +235,20 @@ class TestKitsuneBackend(unittest.TestCase):
         # After the failing page there are a page with 2 questions
         self.assertEqual(len(questions), 2)
 
+    @httpretty.activate
+    def test_search_fields(self):
+        """Test whether the search_fields is properly set"""
+
+        HTTPServer.routes()
+
+        # Test fetch questions with their reviews
+        kitsune = Kitsune(KITSUNE_SERVER_URL)
+
+        questions = [question for question in kitsune.fetch(offset=None)]
+
+        for question in questions:
+            self.assertEqual(kitsune.metadata_id(question['data']), question['search_fields']['item_id'])
+
 
 class TestKitsuneBackendArchive(TestCaseBackendArchive):
     """Kitsune backend tests using an archive"""

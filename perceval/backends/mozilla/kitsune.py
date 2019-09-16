@@ -56,7 +56,7 @@ class Kitsune(Backend):
     :param tag: label used to mark the data
     :param archive: archive to store/retrieve items
     """
-    version = '0.6.3'
+    version = '0.7.0'
 
     CATEGORIES = [CATEGORY_QUESTION]
 
