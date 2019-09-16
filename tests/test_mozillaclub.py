@@ -179,6 +179,30 @@ class TestMozillaClubBackend(unittest.TestCase):
 
         self.assertEqual(len(events), 0)
 
+    @httpretty.activate
+    def test_search_fields(self):
+        """Test whether the search_fields is properly set"""
+
+        configure_http_server()
+
+        mozillaclub = MozillaClub(MozillaClub_FEED_URL)
+        events = [event for event in mozillaclub.fetch()]
+
+        event = events[0]
+        self.assertEqual(mozillaclub.metadata_id(event['data']), event['search_fields']['item_id'])
+        self.assertEqual(event['data']['Club Name'], 'Rio Mozilla Club')
+        self.assertEqual(event['data']['Club Name'], event['search_fields']['club_name'])
+
+        event = events[1]
+        self.assertEqual(mozillaclub.metadata_id(event['data']), event['search_fields']['item_id'])
+        self.assertEqual(event['data']['Club Name'], 'Firefox club uog-skt')
+        self.assertEqual(event['data']['Club Name'], event['search_fields']['club_name'])
+
+        event = events[2]
+        self.assertEqual(mozillaclub.metadata_id(event['data']), event['search_fields']['item_id'])
+        self.assertEqual(event['data']['Club Name'], 'Mozilla HETEC Club')
+        self.assertEqual(event['data']['Club Name'], event['search_fields']['club_name'])
+
 
 class TestMozillaClubBackendArchive(TestCaseBackendArchive):
     """MozillaClub backend tests using an archive"""

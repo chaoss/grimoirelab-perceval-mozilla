@@ -55,7 +55,7 @@ class Crates(Backend):
     :param tag: label used to mark the data
     :param archive: archive to store/retrieve items
     """
-    version = '0.3.2'
+    version = '0.4.0'
 
     CATEGORIES = [CATEGORY_CRATES, CATEGORY_SUMMARY]
 

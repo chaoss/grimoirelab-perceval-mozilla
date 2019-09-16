@@ -258,6 +258,18 @@ class TestCratesBackend(unittest.TestCase):
         self.assertEqual(len(item['data']['versions_data']['versions']), 7)
 
     @httpretty.activate
+    def test_crates_search_fields(self):
+        """Test whether the search_fields is properly set"""
+
+        setup_http_server()
+
+        backend = Crates()
+        items = [items for items in backend.fetch(from_date=None)]
+
+        for item in items:
+            self.assertEqual(backend.metadata_id(item['data']), item['search_fields']['item_id'])
+
+    @httpretty.activate
     def test_fetch_summary(self):
         """Test whether a summary is returned"""
 
@@ -270,6 +282,18 @@ class TestCratesBackend(unittest.TestCase):
         self.assertEqual(items[0]['category'], CATEGORY_SUMMARY)
         self.assertEqual(items[0]['data']['num_crates'], 10000)
         self.assertEqual(items[0]['data']['num_downloads'], 2000000000)
+
+    @httpretty.activate
+    def test_summary_search_fields(self):
+        """Test whether the search_fields is properly set"""
+
+        setup_http_server()
+
+        backend = Crates()
+        items = [items for items in backend.fetch(category=CATEGORY_SUMMARY)]
+
+        for item in items:
+            self.assertEqual(backend.metadata_id(item['data']), item['search_fields']['item_id'])
 
     @httpretty.activate
     def test_fetch_from_date(self):
