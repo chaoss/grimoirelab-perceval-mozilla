@@ -354,7 +354,7 @@ class MozillaClubCommand(BackendCommand):
     def setup_cmd_parser(cls):
         """Returns the MozillaClub argument parser."""
 
-        parser = BackendCommandArgumentParser(cls.BACKEND.CATEGORIES,
+        parser = BackendCommandArgumentParser(cls.BACKEND,
                                               archive=True)
 
         # Required arguments

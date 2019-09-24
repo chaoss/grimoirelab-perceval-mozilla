@@ -342,7 +342,7 @@ class CratesCommand(BackendCommand):
     def setup_cmd_parser(cls):
         """Returns the Crates argument parser."""
 
-        parser = BackendCommandArgumentParser(cls.BACKEND.CATEGORIES,
+        parser = BackendCommandArgumentParser(cls.BACKEND,
                                               from_date=True,
                                               archive=True,
                                               token_auth=True)
