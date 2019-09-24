@@ -373,7 +373,7 @@ class TestReMoCommand(unittest.TestCase):
 
         parser = ReMoCommand.setup_cmd_parser()
         self.assertIsInstance(parser, BackendCommandArgumentParser)
-        self.assertEqual(parser._categories, ReMo.CATEGORIES)
+        self.assertEqual(parser._backend, ReMo)
 
         args = [MOZILLA_REPS_SERVER_URL,
                 '--category', 'user',
