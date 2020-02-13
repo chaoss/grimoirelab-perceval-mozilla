@@ -17,6 +17,7 @@
 #
 # Authors:
 #     Alvaro del Castillo <acs@bitergia.com>
+#     Quan Zhou <quan@bitergia.com>
 #
 
 import json
@@ -53,17 +54,18 @@ class ReMo(Backend):
     :param url: ReMo URL
     :param tag: label used to mark the data
     :param archive: archive to store/retrieve items
+    :param ssl_verify: enable/disable SSL verification
     """
-    version = '0.8.0'
+    version = '0.9.0'
 
     CATEGORIES = [CATEGORY_ACTIVITY, CATEGORY_EVENT, CATEGORY_USER]
 
-    def __init__(self, url=None, tag=None, archive=None):
+    def __init__(self, url=None, tag=None, archive=None, ssl_verify=True):
         if not url:
             url = MOZILLA_REPS_URL
         origin = url
 
-        super().__init__(origin, tag=tag, archive=archive)
+        super().__init__(origin, tag=tag, archive=archive, ssl_verify=ssl_verify)
         self.url = url
         self.client = None
 
@@ -215,7 +217,7 @@ class ReMo(Backend):
     def _init_client(self, from_archive=False):
         """Init client"""
 
-        return ReMoClient(self.url, self.archive, from_archive)
+        return ReMoClient(self.url, self.archive, from_archive, self.ssl_verify)
 
 
 class ReMoClient(HttpClient):
@@ -227,6 +229,7 @@ class ReMoClient(HttpClient):
     :param url: URL of ReMo (sample https://reps.mozilla.org)
     :param archive: an archive to store/read fetched data
     :param from_archive: it tells whether to write/read the archive
+    :param ssl_verify: enable/disable SSL verification
 
     :raises HTTPError: when an error occurs doing the request
     """
@@ -235,8 +238,8 @@ class ReMoClient(HttpClient):
     ITEMS_PER_PAGE = 20  # Items per page in ReMo API
     API_PATH = '/api/remo/v1'
 
-    def __init__(self, url, archive=None, from_archive=False):
-        super().__init__(url, archive=archive, from_archive=from_archive)
+    def __init__(self, url, archive=None, from_archive=False, ssl_verify=True):
+        super().__init__(url, archive=archive, from_archive=from_archive, ssl_verify=ssl_verify)
         self.api_activities_url = urijoin(self.base_url, ReMoClient.API_PATH + '/activities/')
         self.api_activities_url += '/'  # API needs a final /
         self.api_events_url = urijoin(self.base_url, ReMoClient.API_PATH + '/events/')
@@ -303,7 +306,8 @@ class ReMoCommand(BackendCommand):
 
         parser = BackendCommandArgumentParser(cls.BACKEND,
                                               offset=True,
-                                              archive=True)
+                                              archive=True,
+                                              ssl_verify=True)
         # Required arguments
         parser.parser.add_argument('url', nargs='?',
                                    default="https://reps.mozilla.org",
