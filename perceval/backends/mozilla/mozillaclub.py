@@ -17,6 +17,7 @@
 #
 # Authors:
 #     Alvaro del Castillo <acs@bitergia.com>
+#     Quan Zhou <quan@bitergia.com>
 #
 
 import json
@@ -69,18 +70,19 @@ class MozillaClub(Backend):
     :param url: Mozilla Club Events url
     :param tag: label used to mark the data
     :param archive: archive to store/retrieve items
+    :param ssl_verify: enable/disable SSL verification
     """
-    version = '0.4.0'
+    version = '0.5.0'
 
     CATEGORIES = [CATEGORY_EVENT]
     EXTRA_SEARCH_FIELDS = {
         'club_name': ['Club Name']
     }
 
-    def __init__(self, url=MOZILLA_CLUB_URL, tag=None, archive=None):
+    def __init__(self, url=MOZILLA_CLUB_URL, tag=None, archive=None, ssl_verify=True):
         origin = url
         self.url = url
-        super().__init__(origin, tag=tag, archive=archive)
+        super().__init__(origin, tag=tag, archive=archive, ssl_verify=ssl_verify)
 
         self.client = None
 
@@ -170,7 +172,7 @@ class MozillaClub(Backend):
     def _init_client(self, from_archive=False):
         """Init client"""
 
-        return MozillaClubClient(self.url, self.archive, from_archive)
+        return MozillaClubClient(self.url, self.archive, from_archive, self.ssl_verify)
 
 
 class MozillaClubClient(HttpClient):
@@ -182,11 +184,12 @@ class MozillaClubClient(HttpClient):
     :param url: URL of MozillaClub
     :param archive: an archive to store/read fetched data
     :param from_archive: it tells whether to write/read the archive
+    :param ssl_verify: enable/disable SSL verification
 
     :raises HTTPError: when an error occurs doing the request
     """
-    def __init__(self, url, archive=None, from_archive=False):
-        super().__init__(url, archive=archive, from_archive=from_archive)
+    def __init__(self, url, archive=None, from_archive=False, ssl_verify=True):
+        super().__init__(url, archive=archive, from_archive=from_archive, ssl_verify=ssl_verify)
 
     def get_cells(self):
         """Retrieve all cells from the spreadsheet."""
@@ -355,7 +358,8 @@ class MozillaClubCommand(BackendCommand):
         """Returns the MozillaClub argument parser."""
 
         parser = BackendCommandArgumentParser(cls.BACKEND,
-                                              archive=True)
+                                              archive=True,
+                                              ssl_verify=True)
 
         # Required arguments
         parser.parser.add_argument('url', nargs='?',
