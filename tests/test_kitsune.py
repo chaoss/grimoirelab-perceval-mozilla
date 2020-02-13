@@ -19,6 +19,7 @@
 # Authors:
 #     Santiago Dueñas <sduenas@bitergia.com>
 #     Alvaro del Castillo <acs@bitergia.com>
+#     Quan Zhou <quan@bitergia.com>
 #
 
 import json
@@ -120,18 +121,21 @@ class TestKitsuneBackend(unittest.TestCase):
         self.assertEqual(kitsune.origin, KITSUNE_SERVER_URL)
         self.assertEqual(kitsune.tag, 'test')
         self.assertIsNone(kitsune.client)
+        self.assertTrue(kitsune.ssl_verify)
 
         # When tag is empty or None it will be set to
         # the value in url
-        kitsune = Kitsune(KITSUNE_SERVER_URL)
+        kitsune = Kitsune(KITSUNE_SERVER_URL, ssl_verify=False)
         self.assertEqual(kitsune.url, KITSUNE_SERVER_URL)
         self.assertEqual(kitsune.origin, KITSUNE_SERVER_URL)
         self.assertEqual(kitsune.tag, KITSUNE_SERVER_URL)
+        self.assertFalse(kitsune.ssl_verify)
 
         kitsune = Kitsune(KITSUNE_SERVER_URL, tag='')
         self.assertEqual(kitsune.url, KITSUNE_SERVER_URL)
         self.assertEqual(kitsune.origin, KITSUNE_SERVER_URL)
         self.assertEqual(kitsune.tag, KITSUNE_SERVER_URL)
+        self.assertTrue(kitsune.ssl_verify)
 
     def test_has_archiving(self):
         """Test if it returns True when has_archiving is called"""
@@ -326,6 +330,14 @@ class TestKitsuneCommand(unittest.TestCase):
         self.assertEqual(parsed_args.tag, 'test')
         self.assertEqual(parsed_args.no_archive, True)
         self.assertEqual(parsed_args.offset, 88)
+        self.assertTrue(parsed_args.ssl_verify)
+
+        args = [KITSUNE_SERVER_URL,
+                '--no-ssl-verify']
+
+        parsed_args = parser.parse(*args)
+        self.assertEqual(parsed_args.url, KITSUNE_SERVER_URL)
+        self.assertFalse(parsed_args.ssl_verify)
 
 
 class TestKitsuneClient(unittest.TestCase):
@@ -336,10 +348,25 @@ class TestKitsuneClient(unittest.TestCase):
     into account that the body returned on each request might not
     match with the parameters from the request.
     """
-    @httpretty.activate
+
     def test_init(self):
         """Test initialization"""
-        client = KitsuneClient(KITSUNE_SERVER_URL)
+
+        base_url = KITSUNE_SERVER_URL + "/api/2"
+
+        kitsune = KitsuneClient(KITSUNE_SERVER_URL)
+
+        self.assertEqual(kitsune.base_url, base_url)
+        self.assertIsNone(kitsune.archive)
+        self.assertFalse(kitsune.from_archive)
+        self.assertTrue(kitsune.ssl_verify)
+
+        kitsune = KitsuneClient(KITSUNE_SERVER_URL, ssl_verify=False)
+
+        self.assertEqual(kitsune.base_url, base_url)
+        self.assertIsNone(kitsune.archive)
+        self.assertFalse(kitsune.from_archive)
+        self.assertFalse(kitsune.ssl_verify)
 
     @httpretty.activate
     def test_get_questions(self):
