@@ -17,6 +17,7 @@
 #
 # Authors:
 #     Valerio Cosentino <valcos@bitergia.com>
+#     Quan Zhou <quan@bitergia.com>
 #
 
 import json
@@ -54,15 +55,16 @@ class Crates(Backend):
     :param sleep_time: sleep time in case of connection lost
     :param tag: label used to mark the data
     :param archive: archive to store/retrieve items
+    :param ssl_verify: enable/disable SSL verification
     """
-    version = '0.4.0'
+    version = '0.5.0'
 
     CATEGORIES = [CATEGORY_CRATES, CATEGORY_SUMMARY]
 
-    def __init__(self, sleep_time=SLEEP_TIME, tag=None, archive=None):
+    def __init__(self, sleep_time=SLEEP_TIME, tag=None, archive=None, ssl_verify=True):
         origin = CRATES_URL
 
-        super().__init__(origin, tag=tag, archive=archive)
+        super().__init__(origin, tag=tag, archive=archive, ssl_verify=ssl_verify)
         self.sleep_time = sleep_time
 
         self.client = None
@@ -164,7 +166,7 @@ class Crates(Backend):
     def _init_client(self, from_archive=False):
         """Init client"""
 
-        return CratesClient(self.sleep_time, self.archive, from_archive)
+        return CratesClient(self.sleep_time, self.archive, from_archive, self.ssl_verify)
 
     def __fetch_summary(self):
         """Fetch summary"""
@@ -254,14 +256,15 @@ class CratesClient(HttpClient):
         of connection problems
     :param archive: an archive to store/read fetched data
     :param from_archive: it tells whether to write/read the archive
+    :param ssl_verify: enable/disable SSL verification
     """
 
     MAX_RETRIES = 5
 
-    def __init__(self, sleep_time=SLEEP_TIME, archive=None, from_archive=False):
+    def __init__(self, sleep_time=SLEEP_TIME, archive=None, from_archive=False, ssl_verify=True):
         super().__init__(CRATES_API_URL, sleep_time=sleep_time, max_retries=CratesClient.MAX_RETRIES,
                          extra_headers={'Content-type': 'application/json'},
-                         archive=archive, from_archive=from_archive)
+                         archive=archive, from_archive=from_archive, ssl_verify=ssl_verify)
 
     def summary(self):
         """Get Crates.io summary"""
@@ -345,7 +348,8 @@ class CratesCommand(BackendCommand):
         parser = BackendCommandArgumentParser(cls.BACKEND,
                                               from_date=True,
                                               archive=True,
-                                              token_auth=True)
+                                              token_auth=True,
+                                              ssl_verify=True)
 
         # Optional arguments
         group = parser.parser.add_argument_group('Crates.io arguments')

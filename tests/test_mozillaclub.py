@@ -19,6 +19,7 @@
 # Authors:
 #     Santiago Dueñas <sduenas@bitergia.com>
 #     Alvaro del Castillo <acs@bitergia.com>
+#     Quan Zhou <quan@bitergia.com>
 #
 
 import unittest
@@ -85,18 +86,21 @@ class TestMozillaClubBackend(unittest.TestCase):
         self.assertEqual(mozillaclub.origin, MozillaClub_FEED_URL)
         self.assertEqual(mozillaclub.tag, 'test')
         self.assertIsNone(mozillaclub.client)
+        self.assertTrue(mozillaclub.ssl_verify)
 
         # When tag is empty or None it will be set to
         # the value in url
-        mozillaclub = MozillaClub(MozillaClub_FEED_URL)
+        mozillaclub = MozillaClub(MozillaClub_FEED_URL, ssl_verify=False)
         self.assertEqual(mozillaclub.url, MozillaClub_FEED_URL)
         self.assertEqual(mozillaclub.origin, MozillaClub_FEED_URL)
         self.assertEqual(mozillaclub.tag, MozillaClub_FEED_URL)
+        self.assertFalse(mozillaclub.ssl_verify)
 
         mozillaclub = MozillaClub(MozillaClub_FEED_URL, tag='')
         self.assertEqual(mozillaclub.url, MozillaClub_FEED_URL)
         self.assertEqual(mozillaclub.origin, MozillaClub_FEED_URL)
         self.assertEqual(mozillaclub.tag, MozillaClub_FEED_URL)
+        self.assertTrue(mozillaclub.ssl_verify)
 
     def test_has_archiving(self):
         """Test if it returns True when has_archiving is called"""
@@ -261,6 +265,13 @@ class TestMozillaClubCommand(unittest.TestCase):
         self.assertEqual(parsed_args.url, MozillaClub_FEED_URL)
         self.assertEqual(parsed_args.tag, 'test')
         self.assertEqual(parsed_args.no_archive, True)
+        self.assertTrue(parsed_args.ssl_verify)
+
+        args = [MozillaClub_FEED_URL, '--no-ssl-verify']
+
+        parsed_args = parser.parse(*args)
+        self.assertEqual(parsed_args.url, MozillaClub_FEED_URL)
+        self.assertFalse(parsed_args.ssl_verify)
 
 
 class TestMozillaClubClient(unittest.TestCase):
@@ -271,10 +282,23 @@ class TestMozillaClubClient(unittest.TestCase):
     into account that the body returned on each request might not
     match with the parameters from the request.
     """
-    @httpretty.activate
+
     def test_init(self):
         """Test initialization"""
-        client = MozillaClubClient(MozillaClub_FEED_URL)
+
+        mozillaclub = MozillaClubClient(MozillaClub_FEED_URL)
+
+        self.assertEqual(mozillaclub.base_url, MozillaClub_FEED_URL)
+        self.assertIsNone(mozillaclub.archive)
+        self.assertFalse(mozillaclub.from_archive)
+        self.assertTrue(mozillaclub.ssl_verify)
+
+        mozillaclub = MozillaClubClient(MozillaClub_FEED_URL, ssl_verify=False)
+
+        self.assertEqual(mozillaclub.base_url, MozillaClub_FEED_URL)
+        self.assertIsNone(mozillaclub.archive)
+        self.assertFalse(mozillaclub.from_archive)
+        self.assertFalse(mozillaclub.ssl_verify)
 
     @httpretty.activate
     def test_get_events(self):

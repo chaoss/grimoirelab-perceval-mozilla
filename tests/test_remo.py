@@ -19,6 +19,7 @@
 # Authors:
 #     Santiago Dueñas <sduenas@bitergia.com>
 #     Alvaro del Castillo <acs@bitergia.com>
+#     Quan Zhou <quan@bitergia.com>
 #
 
 import re
@@ -105,18 +106,21 @@ class TestReMoBackend(unittest.TestCase):
         self.assertEqual(remo.origin, MOZILLA_REPS_SERVER_URL)
         self.assertEqual(remo.tag, 'test')
         self.assertIsNone(remo.client)
+        self.assertTrue(remo.ssl_verify)
 
         # When tag is empty or None it will be set to
         # the value in url
-        remo = ReMo(MOZILLA_REPS_SERVER_URL)
+        remo = ReMo(MOZILLA_REPS_SERVER_URL, ssl_verify=False)
         self.assertEqual(remo.url, MOZILLA_REPS_SERVER_URL)
         self.assertEqual(remo.origin, MOZILLA_REPS_SERVER_URL)
         self.assertEqual(remo.tag, MOZILLA_REPS_SERVER_URL)
+        self.assertFalse(remo.ssl_verify)
 
         remo = ReMo(MOZILLA_REPS_SERVER_URL, tag='')
         self.assertEqual(remo.url, MOZILLA_REPS_SERVER_URL)
         self.assertEqual(remo.origin, MOZILLA_REPS_SERVER_URL)
         self.assertEqual(remo.tag, MOZILLA_REPS_SERVER_URL)
+        self.assertTrue(remo.ssl_verify)
 
         # If no url is provided, MOZILLA_REPS_URL is used
         remo = ReMo()
@@ -387,6 +391,13 @@ class TestReMoCommand(unittest.TestCase):
         self.assertEqual(parsed_args.tag, 'test')
         self.assertEqual(parsed_args.no_archive, True)
         self.assertEqual(parsed_args.offset, 88)
+        self.assertTrue(parsed_args.ssl_verify)
+
+        args = [MOZILLA_REPS_SERVER_URL, '--no-ssl-verify']
+
+        parsed_args = parser.parse(*args)
+        self.assertEqual(parsed_args.url, MOZILLA_REPS_SERVER_URL)
+        self.assertFalse(parsed_args.ssl_verify)
 
 
 class TestReMoClient(unittest.TestCase):
@@ -397,10 +408,23 @@ class TestReMoClient(unittest.TestCase):
     into account that the body returned on each request might not
     match with the parameters from the request.
     """
-    @httpretty.activate
+
     def test_init(self):
         """Test initialization"""
-        client = ReMoClient(MOZILLA_REPS_SERVER_URL)
+
+        remo = ReMoClient(MOZILLA_REPS_SERVER_URL)
+
+        self.assertEqual(remo.base_url, MOZILLA_REPS_SERVER_URL)
+        self.assertIsNone(remo.archive)
+        self.assertFalse(remo.from_archive)
+        self.assertTrue(remo.ssl_verify)
+
+        remo = ReMoClient(MOZILLA_REPS_SERVER_URL, ssl_verify=False)
+
+        self.assertEqual(remo.base_url, MOZILLA_REPS_SERVER_URL)
+        self.assertIsNone(remo.archive)
+        self.assertFalse(remo.from_archive)
+        self.assertFalse(remo.ssl_verify)
 
     @httpretty.activate
     def test_get_items(self):

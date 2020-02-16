@@ -17,6 +17,7 @@
 #
 # Authors:
 #     Alvaro del Castillo <acs@bitergia.com>
+#     Quan Zhou <quan@bitergia.com>
 #
 
 import json
@@ -55,17 +56,18 @@ class Kitsune(Backend):
     :param url: Kitsune URL
     :param tag: label used to mark the data
     :param archive: archive to store/retrieve items
+    :param ssl_verify: enable/disable SSL verification
     """
-    version = '0.7.0'
+    version = '0.8.0'
 
     CATEGORIES = [CATEGORY_QUESTION]
 
-    def __init__(self, url=None, tag=None, archive=None):
+    def __init__(self, url=None, tag=None, archive=None, ssl_verify=True):
         if not url:
             url = KITSUNE_URL
         origin = url
 
-        super().__init__(origin, tag=tag, archive=archive)
+        super().__init__(origin, tag=tag, archive=archive, ssl_verify=ssl_verify)
         self.url = url
 
         self.client = None
@@ -222,7 +224,7 @@ class Kitsune(Backend):
     def _init_client(self, from_archive=False):
         """Init client"""
 
-        return KitsuneClient(self.url, self.archive, from_archive)
+        return KitsuneClient(self.url, self.archive, from_archive, self.ssl_verify)
 
 
 class KitsuneClient(HttpClient):
@@ -234,14 +236,15 @@ class KitsuneClient(HttpClient):
     :param url: URL of Kitsune (sample https://support.mozilla.org)
     :param archive: an archive to store/read fetched data
     :param from_archive: it tells whether to write/read the archive
+    :param ssl_verify: enable/disable SSL verification
 
     :raises HTTPError: when an error occurs doing the request
     """
     FIRST_PAGE = 1  # Initial page in Kitsune
     ITEMS_PER_PAGE = 20  # Items per page in Kitsune API
 
-    def __init__(self, url, archive=None, from_archive=False):
-        super().__init__(urijoin(url, '/api/2/'), archive=archive, from_archive=from_archive)
+    def __init__(self, url, archive=None, from_archive=False, ssl_verify=True):
+        super().__init__(urijoin(url, '/api/2/'), archive=archive, from_archive=from_archive, ssl_verify=ssl_verify)
 
     def get_questions(self, offset=None):
         """Retrieve questions from older to newer updated starting offset"""
@@ -311,7 +314,8 @@ class KitsuneCommand(BackendCommand):
 
         parser = BackendCommandArgumentParser(cls.BACKEND,
                                               offset=True,
-                                              archive=True)
+                                              archive=True,
+                                              ssl_verify=True)
 
         # Required arguments
         parser.parser.add_argument('url', nargs='?',

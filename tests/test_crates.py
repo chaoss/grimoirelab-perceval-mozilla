@@ -18,6 +18,7 @@
 #
 # Authors:
 #     Valerio Cosentino <valcos@bitergia.com>
+#     Quan Zhou <quan@bitergia.com>
 #
 
 import datetime
@@ -197,16 +198,19 @@ class TestCratesBackend(unittest.TestCase):
         self.assertEqual(crates.origin, 'https://crates.io/')
         self.assertEqual(crates.tag, 'test')
         self.assertIsNone(crates.client)
+        self.assertTrue(crates.ssl_verify)
 
         # When tag is empty or None it will be set to
         # the value in origin
-        crates = Crates()
+        crates = Crates(ssl_verify=False)
         self.assertEqual(crates.origin, 'https://crates.io/')
         self.assertEqual(crates.tag, 'https://crates.io/')
+        self.assertFalse(crates.ssl_verify)
 
         crates = Crates(tag='')
         self.assertEqual(crates.origin, 'https://crates.io/')
         self.assertEqual(crates.tag, 'https://crates.io/')
+        self.assertTrue(crates.ssl_verify)
 
     def test_has_archiving(self):
         """Test if it returns True when has_archiving is called"""
@@ -424,6 +428,26 @@ class TestCratesBackendArchive(TestCaseBackendArchive):
 class TestCratesClient(unittest.TestCase):
     """Crates API client tests"""
 
+    def test_init(self):
+        """Test initialization"""
+
+        crates = CratesClient()
+
+        self.assertEqual(crates.base_url, CRATES_API_URL)
+        self.assertEqual(crates.max_retries, 5)
+        self.assertEqual(crates.sleep_time, 60)
+        self.assertIsNone(crates.archive)
+        self.assertFalse(crates.from_archive)
+        self.assertTrue(crates.ssl_verify)
+
+        crates = CratesClient(ssl_verify=False)
+        self.assertEqual(crates.base_url, CRATES_API_URL)
+        self.assertEqual(crates.max_retries, 5)
+        self.assertEqual(crates.sleep_time, 60)
+        self.assertIsNone(crates.archive)
+        self.assertFalse(crates.from_archive)
+        self.assertFalse(crates.ssl_verify)
+
     @httpretty.activate
     def test_summary(self):
         """Test summary API call"""
@@ -491,13 +515,19 @@ class TestCratesCommand(unittest.TestCase):
         self.assertEqual(parsed_args.from_date, DEFAULT_DATETIME)
         self.assertEqual(parsed_args.category, CATEGORY_SUMMARY)
         self.assertEqual(parsed_args.sleep_time, 600)
+        self.assertTrue(parsed_args.ssl_verify)
 
         args = ['--tag', 'test',
                 '--from-date', '1970-01-01',
-                '--category', 'summary']
-        parsed_args = parser.parse(*args)
+                '--category', 'summary',
+                '--no-ssl-verify']
 
+        parsed_args = parser.parse(*args)
+        self.assertEqual(parsed_args.tag, 'test')
+        self.assertEqual(parsed_args.from_date, DEFAULT_DATETIME)
+        self.assertEqual(parsed_args.category, CATEGORY_SUMMARY)
         self.assertEqual(parsed_args.sleep_time, SLEEP_TIME)
+        self.assertFalse(parsed_args.ssl_verify)
 
 
 if __name__ == "__main__":
