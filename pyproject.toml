@@ -35,7 +35,7 @@ classifiers = [
 "Bug Tracker" = "https://github.com/chaoss/grimoirelab-perceval-mozilla/issues"
 
 [tool.poetry.dependencies]
-python = "^3.6.1"
+python = "^3.7"
 
 requests = "^2.7.0"
 grimoirelab-toolkit = "^0.2"
@@ -43,6 +43,8 @@ perceval = "^0.17.4"
 
 [tool.poetry.dev-dependencies]
 httpretty = "1.0.2"
+flake8 = "^3.9.2"
+coverage = "^5.5"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
