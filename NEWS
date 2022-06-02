@@ -1,5 +1,14 @@
 # Releases
 
+## perceval-mozilla 0.3.0 - (2022-06-02)
+
+**New features:**
+
+ * Dependencies file for development\
+   Include a new requirements.txt file to install the development version
+   from the repositories.
+
+
 ## perceval-mozilla 0.2 - (2018-05-21)
 
 ** New features improvements: **
@@ -23,3 +32,4 @@
 
 * Offset was not stored in ReMo cache. This caused errors when trying
   to resume with items from the cache. (#1)
+

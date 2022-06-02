@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "perceval-mozilla"
-version = "0.2.13"
+version = "0.3.0"
 description = "Bundle of Perceval backends for Mozilla ecosystem."
 authors = [
     "GrimoireLab Developers"
