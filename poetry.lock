@@ -15,7 +15,7 @@ lxml = ["lxml"]
 
 [[package]]
 name = "certifi"
-version = "2022.6.15"
+version = "2022.6.15.1"
 description = "Python package for providing Mozilla's CA Bundle."
 category = "main"
 optional = false
@@ -169,7 +169,7 @@ python-versions = "*"
 
 [[package]]
 name = "perceval"
-version = "0.20.0rc7"
+version = "0.20.0rc9"
 description = "Send Sir Perceval on a quest to fetch and gather data from software repositories."
 category = "main"
 optional = false
@@ -324,8 +324,8 @@ beautifulsoup4 = [
     {file = "beautifulsoup4-4.11.1.tar.gz", hash = "sha256:ad9aa55b65ef2808eb405f46cf74df7fcb7044d5cbc26487f96eb2ef2e436693"},
 ]
 certifi = [
-    {file = "certifi-2022.6.15-py3-none-any.whl", hash = "sha256:fe86415d55e84719d75f8b69414f6438ac3547d2078ab91b67e779ef69378412"},
-    {file = "certifi-2022.6.15.tar.gz", hash = "sha256:84c85a9078b11105f04f3036a9482ae10e4621616db313fe045dd24743a0820d"},
+    {file = "certifi-2022.6.15.1-py3-none-any.whl", hash = "sha256:43dadad18a7f168740e66944e4fa82c6611848ff9056ad910f8f7a3e46ab89e0"},
+    {file = "certifi-2022.6.15.1.tar.gz", hash = "sha256:cffdcd380919da6137f76633531a5817e3a9f268575c128249fb637e4f9e73fb"},
 ]
 cffi = [
     {file = "cffi-1.15.1-cp27-cp27m-macosx_10_9_x86_64.whl", hash = "sha256:a66d3508133af6e8548451b25058d5812812ec3798c886bf38ed24a98216fab2"},
@@ -533,8 +533,8 @@ mccabe = [
     {file = "mccabe-0.6.1.tar.gz", hash = "sha256:dd8d182285a0fe56bace7f45b5e7d1a6ebcbf524e8f3bd87eb0f125271b8831f"},
 ]
 perceval = [
-    {file = "perceval-0.20.0rc7-py3-none-any.whl", hash = "sha256:abc9843e592e8860794229b0d26b35ebd1cc66c1df97f18f8050375d3cc07ebb"},
-    {file = "perceval-0.20.0rc7.tar.gz", hash = "sha256:b143bb2271aec069957b82ca6982b69abe82fe246c89271835e4c8252fdb5447"},
+    {file = "perceval-0.20.0rc9-py3-none-any.whl", hash = "sha256:a191c69b05bbe572e4499fa3a465fffc139396f2372bf43f0dd237d727910c45"},
+    {file = "perceval-0.20.0rc9.tar.gz", hash = "sha256:540a9d742cd06a9ff9308f0448b8eb24035056943c1f96b18f42bfc3ce3f4c43"},
 ]
 pycodestyle = [
     {file = "pycodestyle-2.7.0-py2.py3-none-any.whl", hash = "sha256:514f76d918fcc0b55c6680472f0a37970994e07bbb80725808c17089be302068"},
