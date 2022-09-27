@@ -117,7 +117,7 @@ pyflakes = ">=2.3.0,<2.4.0"
 
 [[package]]
 name = "grimoirelab-toolkit"
-version = "0.3.1rc1"
+version = "0.3.1"
 description = "Toolkit of common functions used across GrimoireLab"
 category = "main"
 optional = false
@@ -169,7 +169,7 @@ python-versions = "*"
 
 [[package]]
 name = "perceval"
-version = "0.20.0"
+version = "0.20.1"
 description = "Send Sir Perceval on a quest to fetch and gather data from software repositories."
 category = "main"
 optional = false
@@ -514,8 +514,8 @@ flake8 = [
     {file = "flake8-3.9.2.tar.gz", hash = "sha256:07528381786f2a6237b061f6e96610a4167b226cb926e2aa2b6b1d78057c576b"},
 ]
 grimoirelab-toolkit = [
-    {file = "grimoirelab-toolkit-0.3.1rc1.tar.gz", hash = "sha256:b2ee5a5fcffdff0212f7ec82b3d8c4bcbfbef411200788a783752b2352344d61"},
-    {file = "grimoirelab_toolkit-0.3.1rc1-py3-none-any.whl", hash = "sha256:dc26f0b3d320dd404e2b83391146bd22bd59239c74d162dc6bae9de51c43d043"},
+    {file = "grimoirelab-toolkit-0.3.1.tar.gz", hash = "sha256:de5fbb100cda40145e2acfca407bc872e6a6870ab2c5413504c827d926df7903"},
+    {file = "grimoirelab_toolkit-0.3.1-py3-none-any.whl", hash = "sha256:2e92b6d2ba1dc6819cb65b3b78895c2a186db275b337f1eae60ec2c573380e27"},
 ]
 httpretty = [
     {file = "httpretty-1.0.2.tar.gz", hash = "sha256:24a6fd2fe1c76e94801b74db8f52c0fb42718dc4a199a861b305b1a492b9d868"},
@@ -533,8 +533,8 @@ mccabe = [
     {file = "mccabe-0.6.1.tar.gz", hash = "sha256:dd8d182285a0fe56bace7f45b5e7d1a6ebcbf524e8f3bd87eb0f125271b8831f"},
 ]
 perceval = [
-    {file = "perceval-0.20.0-py3-none-any.whl", hash = "sha256:3d4454e4f33742052c2a41a712f33d3e899b1960654c59e81f447bceeade52c9"},
-    {file = "perceval-0.20.0.tar.gz", hash = "sha256:ea116c75f94f807f23f69a5fa9c91d11c1027cfd1abd06ae1f706b79e1bd5cc5"},
+    {file = "perceval-0.20.1-py3-none-any.whl", hash = "sha256:4c96aff582864caf34b46d5c5d812b1f6e460823b29b19e4eac2c937dfd67cad"},
+    {file = "perceval-0.20.1.tar.gz", hash = "sha256:256092fc6650e5dd163461de22a4cb32d5c67803cff3fd16483d5a7c10a550ca"},
 ]
 pycodestyle = [
     {file = "pycodestyle-2.7.0-py2.py3-none-any.whl", hash = "sha256:514f76d918fcc0b55c6680472f0a37970994e07bbb80725808c17089be302068"},
