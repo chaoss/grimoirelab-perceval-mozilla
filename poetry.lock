@@ -496,14 +496,14 @@ files = [
 
 [[package]]
 name = "perceval"
-version = "0.21.2rc3"
+version = "0.21.2rc4"
 description = "Send Sir Perceval on a quest to fetch and gather data from software repositories."
 category = "main"
 optional = false
 python-versions = ">=3.7,<4.0"
 files = [
-    {file = "perceval-0.21.2rc3-py3-none-any.whl", hash = "sha256:17ec53d6c55310efd211d58f9ec280820c8d0682948f0f4e95b9f74d017c6bc8"},
-    {file = "perceval-0.21.2rc3.tar.gz", hash = "sha256:81cb4ce159b33be7662001a2b5457e56aa2d60f026f1a65a5a1b765a8a4e12cd"},
+    {file = "perceval-0.21.2rc4-py3-none-any.whl", hash = "sha256:0d0108665a73ea30ac85391e5a4190cccea6d1b9f1c406ef8c97db28853297cb"},
+    {file = "perceval-0.21.2rc4.tar.gz", hash = "sha256:fefce046ef49edabe4ac0d96a0ef74da0310799ed1286d652c4aa2e2c216544f"},
 ]
 
 [package.dependencies]
