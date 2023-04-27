@@ -489,14 +489,14 @@ files = [
 
 [[package]]
 name = "perceval"
-version = "0.21.5"
+version = "0.21.6"
 description = "Send Sir Perceval on a quest to fetch and gather data from software repositories."
 category = "main"
 optional = false
 python-versions = ">=3.7,<4.0"
 files = [
-    {file = "perceval-0.21.5-py3-none-any.whl", hash = "sha256:da668dc044125ad9adb2ad600a9138d6acc3b5866b9eba373e3efc01de0c1e86"},
-    {file = "perceval-0.21.5.tar.gz", hash = "sha256:24be0b40e7202eeb9a90d10a39bcff747beb89ea49e1e608133d7ef2c647eafe"},
+    {file = "perceval-0.21.6-py3-none-any.whl", hash = "sha256:334375abc1a08ce003eca79a76dd92e1803e7dc084e6c3e1f363a76716c85761"},
+    {file = "perceval-0.21.6.tar.gz", hash = "sha256:cbfc9e43773771ea0411bb36274e3f8b52dfe2a9ae4e78b908ceca82565ca772"},
 ]
 
 [package.dependencies]
@@ -584,14 +584,14 @@ six = ">=1.5"
 
 [[package]]
 name = "requests"
-version = "2.28.2"
+version = "2.29.0"
 description = "Python HTTP for Humans."
 category = "main"
 optional = false
-python-versions = ">=3.7, <4"
+python-versions = ">=3.7"
 files = [
-    {file = "requests-2.28.2-py3-none-any.whl", hash = "sha256:64299f4909223da747622c030b781c0d7811e359c37124b4bd368fb8c6518baa"},
-    {file = "requests-2.28.2.tar.gz", hash = "sha256:98b1b2782e3c6c4904938b84c0eb932721069dfdb9134313beff7c83c2df24bf"},
+    {file = "requests-2.29.0-py3-none-any.whl", hash = "sha256:e8f3c9be120d3333921d213eef078af392fba3933ab7ed2d1cba3b56f2568c3b"},
+    {file = "requests-2.29.0.tar.gz", hash = "sha256:f2e34a75f4749019bb0e3effb66683630e4ffeaf75819fb51bebef1bf5aef059"},
 ]
 
 [package.dependencies]
