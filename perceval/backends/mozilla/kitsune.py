@@ -22,6 +22,7 @@
 
 import json
 import logging
+import time
 
 import requests
 
@@ -32,8 +33,7 @@ from ...backend import (Backend,
                         BackendCommand,
                         BackendCommandArgumentParser)
 from ...client import HttpClient
-from ...errors import ParseError
-
+from ...errors import ParseError, RateLimitError, HttpClientError
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +41,9 @@ KITSUNE_URL = "https://support.mozilla.org"
 DEFAULT_OFFSET = 0
 
 CATEGORY_QUESTION = "question"
+
+DEFAULT_SLEEP_TIME = 180
+MAX_RETRIES = 5
 
 
 class Kitsune(Backend):
@@ -58,17 +61,21 @@ class Kitsune(Backend):
     :param archive: archive to store/retrieve items
     :param ssl_verify: enable/disable SSL verification
     """
-    version = '0.8.0'
+    version = '0.9.0'
 
     CATEGORIES = [CATEGORY_QUESTION]
 
-    def __init__(self, url=None, tag=None, archive=None, ssl_verify=True):
+    def __init__(self, url=None, tag=None, archive=None, ssl_verify=True, sleep_for_rate=False,
+                 sleep_time=DEFAULT_SLEEP_TIME, max_retries=MAX_RETRIES):
         if not url:
             url = KITSUNE_URL
         origin = url
 
         super().__init__(origin, tag=tag, archive=archive, ssl_verify=ssl_verify)
         self.url = url
+        self.sleep_for_rate = sleep_for_rate
+        self.sleep_time = sleep_time
+        self.max_retries = max_retries
 
         self.client = None
 
@@ -180,9 +187,9 @@ class Kitsune(Backend):
     def has_archiving(cls):
         """Returns whether it supports archiving items on the fetch process.
 
-        :returns: this backend supports items archive
+        :returns: this backend does not support items archive
         """
-        return True
+        return False
 
     @classmethod
     def has_resuming(cls):
@@ -221,10 +228,11 @@ class Kitsune(Backend):
         """
         return CATEGORY_QUESTION
 
-    def _init_client(self, from_archive=False):
+    def _init_client(self):
         """Init client"""
 
-        return KitsuneClient(self.url, self.archive, from_archive, self.ssl_verify)
+        return KitsuneClient(self.url, self.ssl_verify, self.sleep_for_rate,
+                             self.sleep_time, self.max_retries)
 
 
 class KitsuneClient(HttpClient):
@@ -234,17 +242,23 @@ class KitsuneClient(HttpClient):
     a Kitsune site.
 
     :param url: URL of Kitsune (sample https://support.mozilla.org)
-    :param archive: an archive to store/read fetched data
-    :param from_archive: it tells whether to write/read the archive
     :param ssl_verify: enable/disable SSL verification
+    :param sleep_for_rate: sleep until rate limit is reset
+    :param sleep_time: seconds to sleep for rate limit
+    :param max_retries: number of max retries for RateLimit
 
     :raises HTTPError: when an error occurs doing the request
     """
     FIRST_PAGE = 1  # Initial page in Kitsune
     ITEMS_PER_PAGE = 20  # Items per page in Kitsune API
 
-    def __init__(self, url, archive=None, from_archive=False, ssl_verify=True):
-        super().__init__(urijoin(url, '/api/2/'), archive=archive, from_archive=from_archive, ssl_verify=ssl_verify)
+    def __init__(self, url, ssl_verify=True, sleep_for_rate=False,
+                 sleep_time=DEFAULT_SLEEP_TIME, max_retries=MAX_RETRIES):
+        super().__init__(urijoin(url, '/api/2/'), ssl_verify=ssl_verify)
+
+        self.sleep_for_rate = sleep_for_rate
+        self.sleep_time = sleep_time
+        self.max_retries = max_retries
 
     def get_questions(self, offset=None):
         """Retrieve questions from older to newer updated starting offset"""
@@ -292,15 +306,36 @@ class KitsuneClient(HttpClient):
                 break
             page += 1
 
+    def sleep_for_rate_limit(self):
+        """The fetching process sleeps until the rate limit is restored or
+           raises a RateLimitError exception if sleep_for_rate flag is disabled.
+        """
+        cause = "Rate limit exhausted."
+        if self.sleep_for_rate:
+            logger.info(f"{cause} Waiting {self.sleep_time} secs for rate limit reset.")
+            time.sleep(self.sleep_time)
+        else:
+            raise RateLimitError(cause=cause, seconds_to_reset=self.sleep_time)
+
     def fetch(self, url, params):
         """Return the textual content associated to the Response object"""
 
         logger.debug("Kitsune client calls API: %s params: %s",
                      url, str(params))
 
-        response = super().fetch(url, payload=params)
+        retries = self.max_retries
+        while retries >= 0:
+            try:
+                response = super().fetch(url, payload=params)
+                return response.text
+            except requests.exceptions.HTTPError as ex:
+                if ex.response.status_code == 429 and retries > 0:
+                    retries -= 1
+                    self.sleep_for_rate_limit()
+                else:
+                    raise ex
 
-        return response.text
+        raise HttpClientError(cause="Max retries exceeded")
 
 
 class KitsuneCommand(BackendCommand):
@@ -314,7 +349,6 @@ class KitsuneCommand(BackendCommand):
 
         parser = BackendCommandArgumentParser(cls.BACKEND,
                                               offset=True,
-                                              archive=True,
                                               ssl_verify=True)
 
         # Required arguments
@@ -322,4 +356,15 @@ class KitsuneCommand(BackendCommand):
                                    default="https://support.mozilla.org",
                                    help="Kitsune URL (default: https://support.mozilla.org)")
 
+        # Kitsune options
+        group = parser.parser.add_argument_group('Kitsune arguments')
+        group.add_argument('--sleep-for-rate', dest='sleep_for_rate',
+                           action='store_true',
+                           help="sleep for getting more rate")
+        group.add_argument('--max-retries', dest='max_retries',
+                           default=MAX_RETRIES, type=int,
+                           help="number of API call retries")
+        group.add_argument('--sleep-time', dest='sleep_time',
+                           default=DEFAULT_SLEEP_TIME, type=int,
+                           help="sleeping time between API call retries")
         return parser

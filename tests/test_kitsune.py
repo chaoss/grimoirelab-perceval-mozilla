@@ -23,17 +23,18 @@
 #
 
 import json
+import time
 import unittest
 
 import httpretty
 import requests
 
 from perceval.backend import BackendCommandArgumentParser
+from perceval.errors import RateLimitError
 
 from perceval.backends.mozilla.kitsune import (Kitsune,
                                                KitsuneCommand,
                                                KitsuneClient)
-from base import TestCaseBackendArchive
 
 
 KITSUNE_SERVER_URL = 'http://example.com'
@@ -42,6 +43,7 @@ KITSUNE_API_QUESTION = KITSUNE_SERVER_URL + '/api/2/question/'
 KITSUNE_API_ANSWER = KITSUNE_SERVER_URL + '/api/2/answer/'
 
 KITSUNE_SERVER_FAIL_PAGE = 69
+KITSUNE_SERVER_RATELIMIT_PAGE = 200
 KITSUNE_ITEMS_PER_PAGE = 20
 
 
@@ -90,6 +92,14 @@ class HTTPServer():
             elif page == str(KITSUNE_SERVER_FAIL_PAGE + 1):
                 # Next page to the server fail returns questions
                 return (200, headers, mozilla_questions_2)
+            elif page == str(KITSUNE_SERVER_RATELIMIT_PAGE):
+                # To test RateLimitError
+                last_request = HTTPServer.requests_http[-1] if HTTPServer.requests_http else None
+                if last_request and last_request.querystring['page'][0] == str(KITSUNE_SERVER_RATELIMIT_PAGE):
+                    body = mozilla_questions_2
+                else:
+                    HTTPServer.requests_http.append(httpretty.last_request())
+                    return (429, headers, '')
             else:
                 return (404, headers, '')
 
@@ -115,11 +125,13 @@ class TestKitsuneBackend(unittest.TestCase):
     def test_initialization(self):
         """Test whether attributes are initializated"""
 
-        kitsune = Kitsune(KITSUNE_SERVER_URL, tag='test')
+        kitsune = Kitsune(KITSUNE_SERVER_URL, tag='test', sleep_for_rate=True, max_retries=10)
 
         self.assertEqual(kitsune.url, KITSUNE_SERVER_URL)
         self.assertEqual(kitsune.origin, KITSUNE_SERVER_URL)
         self.assertEqual(kitsune.tag, 'test')
+        self.assertEqual(kitsune.sleep_for_rate, True)
+        self.assertEqual(kitsune.max_retries, 10)
         self.assertIsNone(kitsune.client)
         self.assertTrue(kitsune.ssl_verify)
 
@@ -140,7 +152,7 @@ class TestKitsuneBackend(unittest.TestCase):
     def test_has_archiving(self):
         """Test if it returns True when has_archiving is called"""
 
-        self.assertEqual(Kitsune.has_archiving(), True)
+        self.assertEqual(Kitsune.has_archiving(), False)
 
     def test_has_resuming(self):
         """Test if it returns True when has_resuming is called"""
@@ -254,57 +266,6 @@ class TestKitsuneBackend(unittest.TestCase):
             self.assertEqual(kitsune.metadata_id(question['data']), question['search_fields']['item_id'])
 
 
-class TestKitsuneBackendArchive(TestCaseBackendArchive):
-    """Kitsune backend tests using an archive"""
-
-    def setUp(self):
-        super().setUp()
-        self.backend_write_archive = Kitsune(KITSUNE_SERVER_URL, archive=self.archive)
-        self.backend_read_archive = Kitsune(KITSUNE_SERVER_URL, archive=self.archive)
-
-    @httpretty.activate
-    def test_fetch_from_archive(self):
-        """Test whether the questions are returned from archive"""
-
-        HTTPServer.routes()
-
-        self._test_fetch_from_archive()
-
-    @httpretty.activate
-    def test_fetch_offset_from_archive_offset_0(self):
-        """Test whether the questions are returned offset from archive"""
-
-        HTTPServer.routes()
-
-        offset = 0
-        self._test_fetch_from_archive(offset=offset)
-
-    @httpretty.activate
-    def test_fetch_offset_from_archive_offset_2(self):
-        """Test whether the questions are returned offset from archive"""
-
-        HTTPServer.routes()
-
-        offset = 2
-        self._test_fetch_from_archive(offset=offset)
-
-    @httpretty.activate
-    def test_fetch_offset_from_archive_offset_4(self):
-        """Test whether the questions are returned offset from archive"""
-
-        HTTPServer.routes()
-
-        offset = 4
-        self._test_fetch_from_archive(offset=offset)
-
-    @httpretty.activate
-    def test_fetch_empty_from_archive(self):
-        """Test whether it works when no jobs are fetched from archive"""
-
-        HTTPServer.routes(empty=True)
-        self._test_fetch_from_archive()
-
-
 class TestKitsuneCommand(unittest.TestCase):
     """Tests for KitsuneCommand class"""
 
@@ -322,15 +283,17 @@ class TestKitsuneCommand(unittest.TestCase):
 
         args = [KITSUNE_SERVER_URL,
                 '--tag', 'test',
-                '--no-archive',
-                '--offset', '88']
+                '--offset', '88',
+                '--sleep-for-rate',
+                '--max-retries', '10']
 
         parsed_args = parser.parse(*args)
         self.assertEqual(parsed_args.url, KITSUNE_SERVER_URL)
         self.assertEqual(parsed_args.tag, 'test')
-        self.assertEqual(parsed_args.no_archive, True)
         self.assertEqual(parsed_args.offset, 88)
         self.assertTrue(parsed_args.ssl_verify)
+        self.assertTrue(parsed_args.sleep_for_rate)
+        self.assertEqual(parsed_args.max_retries, 10)
 
         args = [KITSUNE_SERVER_URL,
                 '--no-ssl-verify']
@@ -360,6 +323,9 @@ class TestKitsuneClient(unittest.TestCase):
         self.assertIsNone(kitsune.archive)
         self.assertFalse(kitsune.from_archive)
         self.assertTrue(kitsune.ssl_verify)
+        self.assertEqual(kitsune.sleep_for_rate, False)
+        self.assertEqual(kitsune.sleep_time, 180)
+        self.assertEqual(kitsune.max_retries, 5)
 
         kitsune = KitsuneClient(KITSUNE_SERVER_URL, ssl_verify=False)
 
@@ -367,6 +333,16 @@ class TestKitsuneClient(unittest.TestCase):
         self.assertIsNone(kitsune.archive)
         self.assertFalse(kitsune.from_archive)
         self.assertFalse(kitsune.ssl_verify)
+
+        kitsune = KitsuneClient(KITSUNE_SERVER_URL, sleep_for_rate=True, sleep_time=100,
+                                max_retries=10)
+
+        self.assertEqual(kitsune.base_url, base_url)
+        self.assertIsNone(kitsune.archive)
+        self.assertFalse(kitsune.from_archive)
+        self.assertEqual(kitsune.sleep_for_rate, True)
+        self.assertEqual(kitsune.sleep_time, 100)
+        self.assertEqual(kitsune.max_retries, 10)
 
     @httpretty.activate
     def test_get_questions(self):
@@ -409,6 +385,63 @@ class TestKitsuneClient(unittest.TestCase):
             'question': ['1129949'],
             'page': ['1'],
             'ordering': ['updated']
+        }
+        self.assertDictEqual(req.querystring, expected)
+
+    @httpretty.activate
+    def test_sleep_for_rate(self):
+        """ Test if the clients sleeps when the rate limit is reached"""
+
+        body = read_file('data/kitsune/kitsune_questions_2_2.json')
+        HTTPServer.routes()
+        # Clear previous requests
+        HTTPServer.requests_http = []
+
+        wait_to_reset = 2
+        client = KitsuneClient(KITSUNE_SERVER_URL,
+                               sleep_for_rate=True,
+                               sleep_time=wait_to_reset,
+                               max_retries=2)
+
+        # Call API
+        before = float(time.time())
+        offset = (KITSUNE_SERVER_RATELIMIT_PAGE - 1) * KITSUNE_ITEMS_PER_PAGE
+        response = next(client.get_questions(offset=offset))
+
+        after = float(time.time())
+        diff = after - before
+        self.assertGreaterEqual(diff, wait_to_reset)
+
+        self.assertEqual(response, body)
+        req = HTTPServer.requests_http[-1]
+        self.assertEqual(req.method, 'GET')
+        self.assertRegex(req.path, '/api/2/question/')
+        # Check request params
+        expected = {
+            'page': [str(KITSUNE_SERVER_RATELIMIT_PAGE)],
+            'ordering': ['updated'],
+        }
+        self.assertDictEqual(req.querystring, expected)
+
+    @httpretty.activate
+    def test_rate_limit_error(self):
+        """Test if a rate limit error is raised when rate is exhausted"""
+
+        HTTPServer.routes()
+
+        client = KitsuneClient(KITSUNE_SERVER_URL)
+
+        offset = (KITSUNE_SERVER_RATELIMIT_PAGE - 1) * KITSUNE_ITEMS_PER_PAGE
+        with self.assertRaises(RateLimitError):
+            next(client.get_questions(offset=offset))
+
+        req = HTTPServer.requests_http[-1]
+        self.assertEqual(req.method, 'GET')
+        self.assertRegex(req.path, '/api/2/question/')
+        # Check request params
+        expected = {
+            'page': [str(KITSUNE_SERVER_RATELIMIT_PAGE)],
+            'ordering': ['updated'],
         }
         self.assertDictEqual(req.querystring, expected)
 

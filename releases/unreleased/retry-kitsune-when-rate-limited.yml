@@ -1,0 +1,10 @@
+---
+title: Retry Kitsune when rate limited
+category: added
+author: Jose Javier Merchante <jjmerchante@bitergia.com>
+issue: null
+notes: >
+  Kitsune now includes the `--sleep-for-rate` option to manage
+  `429 Too Many Requests` errors. You can configure retries
+  and sleep duration using the `--max-retries` and `--sleep-time`
+  options respectively.
