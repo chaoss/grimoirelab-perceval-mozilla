@@ -1,5 +1,15 @@
 # Releases
 
+## perceval-mozilla 0.4.0 - (2024-02-19)
+
+**New features:**
+
+ * Retry Kitsune when rate limited\
+   Kitsune now includes the `--sleep-for-rate` option to manage `429 Too
+   Many Requests` errors. You can configure retries and sleep duration
+   using the `--max-retries` and `--sleep-time` options respectively.
+
+
   ## perceval-mozilla 0.3.22 - (2024-02-08)
   
   * Update Poetry's package dependencies
