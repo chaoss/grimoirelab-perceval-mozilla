@@ -57,7 +57,7 @@ class Crates(Backend):
     :param archive: archive to store/retrieve items
     :param ssl_verify: enable/disable SSL verification
     """
-    version = '0.5.0'
+    version = '1.0.0'
 
     CATEGORIES = [CATEGORY_CRATES, CATEGORY_SUMMARY]
 

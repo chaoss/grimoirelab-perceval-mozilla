@@ -72,7 +72,7 @@ class MozillaClub(Backend):
     :param archive: archive to store/retrieve items
     :param ssl_verify: enable/disable SSL verification
     """
-    version = '0.5.0'
+    version = '1.0.0'
 
     CATEGORIES = [CATEGORY_EVENT]
     EXTRA_SEARCH_FIELDS = {

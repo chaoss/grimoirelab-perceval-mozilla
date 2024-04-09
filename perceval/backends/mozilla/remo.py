@@ -56,7 +56,7 @@ class ReMo(Backend):
     :param archive: archive to store/retrieve items
     :param ssl_verify: enable/disable SSL verification
     """
-    version = '0.9.0'
+    version = '1.0.0'
 
     CATEGORIES = [CATEGORY_ACTIVITY, CATEGORY_EVENT, CATEGORY_USER]
 
