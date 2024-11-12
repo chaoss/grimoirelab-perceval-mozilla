@@ -26,7 +26,7 @@ import time
 
 import requests
 
-from grimoirelab_toolkit.datetime import str_to_datetime
+from grimoirelab_toolkit.datetime import str_to_datetime, datetime_to_utc
 from grimoirelab_toolkit.uris import urijoin
 
 from ...backend import (Backend,
@@ -34,11 +34,13 @@ from ...backend import (Backend,
                         BackendCommandArgumentParser)
 from ...client import HttpClient
 from ...errors import ParseError, RateLimitError, HttpClientError
+from ...utils import DEFAULT_DATETIME
+
 
 logger = logging.getLogger(__name__)
 
+
 KITSUNE_URL = "https://support.mozilla.org"
-DEFAULT_OFFSET = 0
 
 CATEGORY_QUESTION = "question"
 
@@ -61,12 +63,13 @@ class Kitsune(Backend):
     :param archive: archive to store/retrieve items
     :param ssl_verify: enable/disable SSL verification
     """
-    version = '1.0.0'
+    version = '2.0.0'
 
     CATEGORIES = [CATEGORY_QUESTION]
 
-    def __init__(self, url=None, tag=None, archive=None, ssl_verify=True, sleep_for_rate=False,
-                 sleep_time=DEFAULT_SLEEP_TIME, max_retries=MAX_RETRIES):
+    def __init__(self, url=None, tag=None, archive=None, ssl_verify=True,
+                 sleep_for_rate=False, sleep_time=DEFAULT_SLEEP_TIME,
+                 max_retries=MAX_RETRIES):
         if not url:
             url = KITSUNE_URL
         origin = url
@@ -79,17 +82,17 @@ class Kitsune(Backend):
 
         self.client = None
 
-    def fetch(self, category=CATEGORY_QUESTION, offset=DEFAULT_OFFSET):
+    def fetch(self, category=CATEGORY_QUESTION, from_date=DEFAULT_DATETIME):
         """Fetch questions from the Kitsune url.
 
         :param category: the category of items to fetch
         :offset: obtain questions after offset
         :returns: a generator of questions
         """
-        if not offset:
-            offset = DEFAULT_OFFSET
+        if not from_date:
+            from_date = DEFAULT_DATETIME
 
-        kwargs = {"offset": offset}
+        kwargs = {"from_date": from_date}
         items = super().fetch(category, **kwargs)
 
         return items
@@ -102,61 +105,25 @@ class Kitsune(Backend):
 
         :returns: a generator of items
         """
-        offset = kwargs['offset']
+        from_date = kwargs['from_date']
 
-        logger.info("Looking for questions at url '%s' using offset %s",
-                    self.url, str(offset))
+        logger.info("Looking for questions at url '%s' updated after %s",
+                    self.url, str(from_date))
 
         nquestions = 0  # number of questions processed
         tquestions = 0  # number of questions from API data
-        equestions = 0  # number of questions dropped by errors
 
-        # Always get complete pages so the first item is always
-        # the first one in the page
-        page = int(offset / KitsuneClient.ITEMS_PER_PAGE)
-        page_offset = page * KitsuneClient.ITEMS_PER_PAGE
-        # drop questions from page before the offset
-        drop_questions = offset - page_offset
-        current_offset = offset
-
-        questions_page = self.client.get_questions(offset)
-
-        while True:
+        for questions_page in self.client.get_questions(from_date):
             try:
-                raw_questions = next(questions_page)
-            except StopIteration:
-                break
-            except requests.exceptions.HTTPError as e:
-                # Continue with the next page if it is a 500 error
-                if e.response.status_code == 500:
-                    logger.exception(e)
-                    logger.error("Problem getting Kitsune questions. "
-                                 "Loosing %i questions. Going to the next page.",
-                                 KitsuneClient.ITEMS_PER_PAGE)
-                    equestions += KitsuneClient.ITEMS_PER_PAGE
-                    current_offset += KitsuneClient.ITEMS_PER_PAGE
-                    questions_page = self.client.get_questions(current_offset)
-                    continue
-                else:
-                    # If it is another error just propagate the exception
-                    raise e
-
-            try:
-                questions_data = json.loads(raw_questions)
+                questions_data = json.loads(questions_page)
                 tquestions = questions_data['count']
                 questions = questions_data['results']
             except (ValueError, KeyError) as ex:
                 logger.error(ex)
-                cause = ("Bad JSON format for mozilla_questions: %s" % (raw_questions))
+                cause = "Bad JSON format for mozilla_questions: %s" % (questions_page)
                 raise ParseError(cause=cause)
 
             for question in questions:
-                if drop_questions > 0:
-                    # Remove extra questions due to page base retrieval
-                    drop_questions -= 1
-                    continue
-                question['offset'] = current_offset
-                current_offset += 1
                 question['answers_data'] = []
                 for raw_answers in self.client.get_question_answers(question['id']):
                     answers = json.loads(raw_answers)['results']
@@ -164,24 +131,10 @@ class Kitsune(Backend):
                 yield question
                 nquestions += 1
 
-            logger.debug("Questions: %i/%i", nquestions + offset, tquestions)
+        equestions = tquestions - nquestions
 
         logger.info("Total number of questions: %i (%i total)", nquestions, tquestions)
         logger.info("Questions with errors dropped: %i", equestions)
-
-    def metadata(self, item, filter_classified=False):
-        """Kitsune metadata.
-
-        This method takes items overrides `metadata` method to add extra
-        information related to Kitsune (offset of the question).
-
-        :param item: an item fetched by a backend
-        :param filter_classified: sets if classified fields were filtered
-        """
-        item = super().metadata(item, filter_classified=filter_classified)
-        item['offset'] = item['data'].pop('offset')
-
-        return item
 
     @classmethod
     def has_archiving(cls):
@@ -209,15 +162,21 @@ class Kitsune(Backend):
     def metadata_updated_on(item):
         """Extracts the update time from a Kitsune item.
 
-        The timestamp is extracted from 'updated' field.
-        This date is a UNIX timestamp but needs to be converted to
-        a float value.
+        The timestamp is the maximum 'updated' field from the question
+        and the answers. This date is a UNIX timestamp but needs to be
+        converted to a float value.
 
         :param item: item generated by the backend
 
         :returns: a UNIX timestamp
         """
-        return float(str_to_datetime(item['updated']).timestamp())
+        max_updated_on = float(str_to_datetime(item['updated']).timestamp())
+
+        for answer in item['answers_data']:
+            answer_updated_on = float(str_to_datetime(answer['updated']).timestamp())
+            max_updated_on = max(max_updated_on, answer_updated_on)
+
+        return max_updated_on
 
     @staticmethod
     def metadata_category(item):
@@ -260,25 +219,42 @@ class KitsuneClient(HttpClient):
         self.sleep_time = sleep_time
         self.max_retries = max_retries
 
-    def get_questions(self, offset=None):
+    def get_questions(self, from_date):
         """Retrieve questions from older to newer updated starting offset"""
 
         page = KitsuneClient.FIRST_PAGE
 
-        if offset:
-            page += int(offset / KitsuneClient.ITEMS_PER_PAGE)
+        from_date = datetime_to_utc(from_date)
+        failures = 0
 
         while True:
             api_questions_url = urijoin(self.base_url, '/question') + '/'
 
             params = {
                 "page": page,
-                "ordering": "updated"
+                "ordering": "updated",
+                "updated__gt": from_date.isoformat()
             }
 
-            questions = self.fetch(api_questions_url, params)
-            yield questions
+            try:
+                questions = self.fetch(api_questions_url, params)
+                yield questions
+            except requests.exceptions.HTTPError as e:
+                if e.response.status_code == 500:
+                    if failures >= self.max_retries:
+                        raise e
+                    logger.exception(e)
+                    logger.error("Problem getting Kitsune questions. "
+                                 "Loosing %i questions. Going to the next page.",
+                                 KitsuneClient.ITEMS_PER_PAGE)
+                    page += 1
+                    failures += 1
+                    continue
+                else:
+                    # If it is another error just propagate the exception
+                    raise e
 
+            failures = 0
             questions_json = json.loads(questions)
             next_uri = questions_json['next']
             if not next_uri:
@@ -348,7 +324,7 @@ class KitsuneCommand(BackendCommand):
         """Returns the Kitsune argument parser."""
 
         parser = BackendCommandArgumentParser(cls.BACKEND,
-                                              offset=True,
+                                              from_date=True,
                                               ssl_verify=True)
 
         # Required arguments
