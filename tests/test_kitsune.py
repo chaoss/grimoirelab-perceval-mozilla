@@ -136,6 +136,11 @@ class HTTPServer():
 class TestKitsuneBackend(unittest.TestCase):
     """Kitsune backend tests"""
 
+    def tearDown(self):
+        """Clean up previous HTTP requests"""
+
+        HTTPServer.requests_http = []
+
     def test_initialization(self):
         """Test whether attributes are initializated"""
 
@@ -148,6 +153,7 @@ class TestKitsuneBackend(unittest.TestCase):
         self.assertEqual(kitsune.max_retries, 10)
         self.assertIsNone(kitsune.client)
         self.assertTrue(kitsune.ssl_verify)
+        self.assertIsNone(kitsune.blacklist_ids)
 
         # When tag is empty or None it will be set to
         # the value in url
@@ -156,12 +162,14 @@ class TestKitsuneBackend(unittest.TestCase):
         self.assertEqual(kitsune.origin, KITSUNE_SERVER_URL)
         self.assertEqual(kitsune.tag, KITSUNE_SERVER_URL)
         self.assertFalse(kitsune.ssl_verify)
+        self.assertIsNone(kitsune.blacklist_ids)
 
-        kitsune = Kitsune(KITSUNE_SERVER_URL, tag='')
+        kitsune = Kitsune(KITSUNE_SERVER_URL, tag='', blacklist_ids=[100])
         self.assertEqual(kitsune.url, KITSUNE_SERVER_URL)
         self.assertEqual(kitsune.origin, KITSUNE_SERVER_URL)
         self.assertEqual(kitsune.tag, KITSUNE_SERVER_URL)
         self.assertTrue(kitsune.ssl_verify)
+        self.assertEqual(kitsune.blacklist_ids, [100])
 
     def test_has_archiving(self):
         """Test if it returns True when has_archiving is called"""
@@ -245,6 +253,28 @@ class TestKitsuneBackend(unittest.TestCase):
         for question in questions:
             self.assertEqual(kitsune.metadata_id(question['data']), question['search_fields']['item_id'])
 
+    @httpretty.activate
+    def test_fetch_questions_blacklisted(self):
+        """Test whether blacklist question works"""
+
+        HTTPServer.routes()
+
+        kitsune = Kitsune(KITSUNE_SERVER_URL, blacklist_ids=[1129969, 1129949])
+
+        with self.assertLogs(level='WARNING') as cm:
+            questions = [question for question in kitsune.fetch()]
+            self.assertEqual(cm.output[1], 'WARNING:perceval.backend:Skipping blacklisted item id 1129949')
+            self.assertEqual(cm.output[0], 'WARNING:perceval.backend:Skipping blacklisted item id 1129969')
+
+        self.assertEqual(len(questions), 2)
+
+        self.assertEqual(questions[0]['data']['id'], 1129968)
+        self.assertEqual(questions[1]['data']['id'], 1129948)
+
+        self.assertEqual(kitsune.summary.total, 4)
+        self.assertEqual(kitsune.summary.fetched, 2)
+        self.assertEqual(kitsune.summary.skipped, 2)
+
 
 class TestKitsuneCommand(unittest.TestCase):
     """Tests for KitsuneCommand class"""
@@ -274,13 +304,16 @@ class TestKitsuneCommand(unittest.TestCase):
         self.assertTrue(parsed_args.ssl_verify)
         self.assertTrue(parsed_args.sleep_for_rate)
         self.assertEqual(parsed_args.max_retries, 10)
+        self.assertIsNone(parsed_args.blacklist_ids)
 
         args = [KITSUNE_SERVER_URL,
-                '--no-ssl-verify']
+                '--no-ssl-verify',
+                '--blacklist-ids', '100', '200']
 
         parsed_args = parser.parse(*args)
         self.assertEqual(parsed_args.url, KITSUNE_SERVER_URL)
         self.assertFalse(parsed_args.ssl_verify)
+        self.assertEqual(parsed_args.blacklist_ids, [100, 200])
 
 
 class TestKitsuneClient(unittest.TestCase):

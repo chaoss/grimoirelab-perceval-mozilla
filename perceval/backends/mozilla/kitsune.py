@@ -31,7 +31,8 @@ from grimoirelab_toolkit.uris import urijoin
 
 from ...backend import (Backend,
                         BackendCommand,
-                        BackendCommandArgumentParser)
+                        BackendCommandArgumentParser,
+                        OriginUniqueField)
 from ...client import HttpClient
 from ...errors import ParseError, RateLimitError, HttpClientError
 from ...utils import DEFAULT_DATETIME
@@ -62,19 +63,27 @@ class Kitsune(Backend):
     :param tag: label used to mark the data
     :param archive: archive to store/retrieve items
     :param ssl_verify: enable/disable SSL verification
+    :param sleep_for_rate: sleep until rate limit is reset
+    :param sleep_time: time (in seconds) to sleep in case
+        of connection problems
+    :param max_retries: number of max retries to a data source
+        before raising a RetryError exception
+    :param blacklist_ids: ids of items that must not be retrieved
     """
-    version = '2.0.0'
+    version = '2.1.0'
 
     CATEGORIES = [CATEGORY_QUESTION]
+    ORIGIN_UNIQUE_FIELD = OriginUniqueField(name='id', type=int)
 
     def __init__(self, url=None, tag=None, archive=None, ssl_verify=True,
                  sleep_for_rate=False, sleep_time=DEFAULT_SLEEP_TIME,
-                 max_retries=MAX_RETRIES):
+                 max_retries=MAX_RETRIES, blacklist_ids=None):
         if not url:
             url = KITSUNE_URL
         origin = url
 
-        super().__init__(origin, tag=tag, archive=archive, ssl_verify=ssl_verify)
+        super().__init__(origin, tag=tag, archive=archive, blacklist_ids=blacklist_ids,
+                         ssl_verify=ssl_verify)
         self.url = url
         self.sleep_for_rate = sleep_for_rate
         self.sleep_time = sleep_time
@@ -124,6 +133,10 @@ class Kitsune(Backend):
                 raise ParseError(cause=cause)
 
             for question in questions:
+                if self._skip_item(question):
+                    self.summary.skipped += 1
+                    continue
+
                 question['answers_data'] = []
                 for raw_answers in self.client.get_question_answers(question['id']):
                     answers = json.loads(raw_answers)['results']
@@ -325,6 +338,7 @@ class KitsuneCommand(BackendCommand):
 
         parser = BackendCommandArgumentParser(cls.BACKEND,
                                               from_date=True,
+                                              blacklist=True,
                                               ssl_verify=True)
 
         # Required arguments
