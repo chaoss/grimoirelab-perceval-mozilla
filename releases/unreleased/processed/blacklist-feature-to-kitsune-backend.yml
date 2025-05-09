@@ -1,8 +1,0 @@
----
-title: Blacklist feature to Kitsune backend
-category: added
-author: Jose Javier Merchante <jjmerchante@bitergia.com>
-issue: null
-notes: >
-  Add blacklist feature to Kitsune backend. This allows to skip
-  questions using `--blacklist-ids 100 200 300`.
