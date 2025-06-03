@@ -1,5 +1,9 @@
 # Releases
 
+  ## perceval-mozilla 1.1.2 - (2025-06-03)
+  
+  * Update Poetry's package dependencies
+
   ## perceval-mozilla 1.1.1 - (2025-05-20)
   
   * Update Poetry's package dependencies
