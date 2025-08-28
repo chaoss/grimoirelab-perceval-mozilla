@@ -2,14 +2,14 @@
 
 [[package]]
 name = "beautifulsoup4"
-version = "4.13.4"
+version = "4.13.5"
 description = "Screen-scraping library"
 optional = false
 python-versions = ">=3.7.0"
 groups = ["main"]
 files = [
-    {file = "beautifulsoup4-4.13.4-py3-none-any.whl", hash = "sha256:9bbbb14bfde9d79f38b8cd5f8c7c85f4b8f2523190ebed90e950a8dea4cb1c4b"},
-    {file = "beautifulsoup4-4.13.4.tar.gz", hash = "sha256:dbb3c4e1ceae6aefebdaf2423247260cd062430a410e38c66f2baa50a8437195"},
+    {file = "beautifulsoup4-4.13.5-py3-none-any.whl", hash = "sha256:642085eaa22233aceadff9c69651bc51e8bf3f874fb6d7104ece2beb24b47c4a"},
+    {file = "beautifulsoup4-4.13.5.tar.gz", hash = "sha256:5e70131382930e7c3de33450a2f54a63d5e4b19386eab43a5b34d594268f3695"},
 ]
 
 [package.dependencies]
@@ -419,14 +419,14 @@ pyflakes = ">=3.4.0,<3.5.0"
 
 [[package]]
 name = "grimoirelab-toolkit"
-version = "1.0.14"
+version = "1.0.15rc1"
 description = "Toolkit of common functions used across GrimoireLab"
 optional = false
 python-versions = "<4.0,>=3.9"
 groups = ["main"]
 files = [
-    {file = "grimoirelab_toolkit-1.0.14-py3-none-any.whl", hash = "sha256:684a2ef467e40135f9e301c33ef71f0599208a663bed33e54ee1bf936710e411"},
-    {file = "grimoirelab_toolkit-1.0.14.tar.gz", hash = "sha256:ce0270a4fd690d53f99ba088ce9505ae44bf21aa2100c7dc8bc8496ee0324a6d"},
+    {file = "grimoirelab_toolkit-1.0.15rc1-py3-none-any.whl", hash = "sha256:930533bffe9a53a976c949122a59c6dcfca6dd17b9c693ef9a0554653e03486b"},
+    {file = "grimoirelab_toolkit-1.0.15rc1.tar.gz", hash = "sha256:2311ef2287d5e3d79a5cc6a34118de4b2d61b697934fba65e9ce8b746241ac04"},
 ]
 
 [package.dependencies]
@@ -472,14 +472,14 @@ files = [
 
 [[package]]
 name = "perceval"
-version = "1.3.3"
+version = "1.3.4rc1"
 description = "Send Sir Perceval on a quest to fetch and gather data from software repositories."
 optional = false
 python-versions = "<4.0,>=3.9"
 groups = ["main"]
 files = [
-    {file = "perceval-1.3.3-py3-none-any.whl", hash = "sha256:6d8b0b191cc77445845f7752520309f0d0f84fb649f523a65c2af08ea0c5700d"},
-    {file = "perceval-1.3.3.tar.gz", hash = "sha256:cea53632a967484350c3082202d0fd9504dfc31e12c5f69983fe45d3b2469148"},
+    {file = "perceval-1.3.4rc1-py3-none-any.whl", hash = "sha256:09b05fd27b39fb1bae872d66ca4dcdd7a581de7abe72b126a8368fc64aa81a52"},
+    {file = "perceval-1.3.4rc1.tar.gz", hash = "sha256:6989884254fc62cb063d9c651712a197c56c026fa3086e5c3955378c984c7a60"},
 ]
 
 [package.dependencies]
@@ -613,26 +613,26 @@ files = [
 
 [[package]]
 name = "soupsieve"
-version = "2.7"
+version = "2.8"
 description = "A modern CSS selector implementation for Beautiful Soup."
 optional = false
-python-versions = ">=3.8"
+python-versions = ">=3.9"
 groups = ["main"]
 files = [
-    {file = "soupsieve-2.7-py3-none-any.whl", hash = "sha256:6e60cc5c1ffaf1cebcc12e8188320b72071e922c2e897f737cadce79ad5d30c4"},
-    {file = "soupsieve-2.7.tar.gz", hash = "sha256:ad282f9b6926286d2ead4750552c8a6142bc4c783fd66b0293547c8fe6ae126a"},
+    {file = "soupsieve-2.8-py3-none-any.whl", hash = "sha256:0cc76456a30e20f5d7f2e14a98a4ae2ee4e5abdc7c5ea0aafe795f344bc7984c"},
+    {file = "soupsieve-2.8.tar.gz", hash = "sha256:e2dd4a40a628cb5f28f6d4b0db8800b8f581b65bb380b97de22ba5ca8d72572f"},
 ]
 
 [[package]]
 name = "typing-extensions"
-version = "4.14.1"
+version = "4.15.0"
 description = "Backported and Experimental Type Hints for Python 3.9+"
 optional = false
 python-versions = ">=3.9"
 groups = ["main"]
 files = [
-    {file = "typing_extensions-4.14.1-py3-none-any.whl", hash = "sha256:d1e1e3b58374dc93031d6eda2420a48ea44a36c2b4766a4fdeb3710755731d76"},
-    {file = "typing_extensions-4.14.1.tar.gz", hash = "sha256:38b39f4aeeab64884ce9f74c94263ef78f3c22467c8724005483154c26648d36"},
+    {file = "typing_extensions-4.15.0-py3-none-any.whl", hash = "sha256:f0fa19c6845758ab08074a0cfa8b7aecb71c999ca73d62883bc25cc018c4e548"},
+    {file = "typing_extensions-4.15.0.tar.gz", hash = "sha256:0cea48d173cc12fa28ecabc3b837ea3cf6f38c6d1136f85cbaaf598984861466"},
 ]
 
 [[package]]
