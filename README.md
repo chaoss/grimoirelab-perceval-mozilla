@@ -13,7 +13,7 @@ The backends currently managed by this package support the next repositories:
 
 ## Requirements
 
- * Python >= 3.9
+ * Python >= 3.10
 
 You will also need some other libraries for running the tool, you can find the
 whole list of dependencies in [pyproject.toml](pyproject.toml) file.
