@@ -278,6 +278,7 @@ class KitsuneClient(HttpClient):
         """Retrieve all answers for a question from older to newer (updated)"""
 
         page = KitsuneClient.FIRST_PAGE
+        failures = 0
 
         while True:
             api_answers_url = urijoin(self.base_url, '/answer') + '/'
@@ -286,9 +287,21 @@ class KitsuneClient(HttpClient):
                 "question": question_id,
                 "ordering": "updated"
             }
-
-            answers_raw = self.fetch(api_answers_url, params)
-            yield answers_raw
+            try:
+                answers_raw = self.fetch(api_answers_url, params)
+                yield answers_raw
+                failures = 0
+            except requests.exceptions.HTTPError as e:
+                failures += 1
+                if e.response.status_code == 500:
+                    if failures > self.max_retries:
+                        logger.error(f"Problem getting Kitsune answers for question id {question_id}. "
+                                     f"Skipping answers for this question.")
+                        return  # Stop generator
+                    time.sleep(2 ** failures)
+                    continue
+                else:
+                    raise
 
             answers = json.loads(answers_raw)
             if not answers['next']:
@@ -323,6 +336,9 @@ class KitsuneClient(HttpClient):
                     self.sleep_for_rate_limit()
                 else:
                     raise ex
+            finally:
+                # Avoids to do requests too fast
+                time.sleep(0.5)
 
         raise HttpClientError(cause="Max retries exceeded")
 

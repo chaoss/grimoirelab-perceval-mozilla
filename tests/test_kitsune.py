@@ -25,8 +25,10 @@
 import json
 import time
 import unittest
+import unittest.mock
 
 import httpretty
+import requests
 
 from grimoirelab_toolkit.datetime import str_to_datetime
 
@@ -42,6 +44,7 @@ KITSUNE_SERVER_URL = 'http://example.com'
 KITSUNE_API = KITSUNE_SERVER_URL + '/api/2/'
 KITSUNE_API_QUESTION = KITSUNE_SERVER_URL + '/api/2/question/'
 KITSUNE_API_ANSWER = KITSUNE_SERVER_URL + '/api/2/answer/'
+KITSUNE_API_ANSWERS_ERROR = KITSUNE_SERVER_URL + '/api/2/answer/?question=12345&page=1&ordering=updated'
 
 KITSUNE_SERVER_FAIL_DATE = '3000-01-01'
 KITSUNE_SERVER_RATELIMIT_DATE = '1980-01-01'
@@ -131,6 +134,11 @@ class HTTPServer():
                                responses=[
                                    httpretty.Response(body=request_callback)
                                ])
+
+        httpretty.register_uri(httpretty.GET,
+                               KITSUNE_API_ANSWERS_ERROR,
+                               match_querystring=True,
+                               status=500)
 
 
 class TestKitsuneBackend(unittest.TestCase):
@@ -458,6 +466,25 @@ class TestKitsuneClient(unittest.TestCase):
             'updated__gt': ['1980-01-01T00:00:00 00:00']
         }
         self.assertDictEqual(req.querystring, expected)
+
+    def test_get_question_answers_retries_and_stops_on_500(self):
+        """Test get question answers stops after max_retries on repeated HTTP 500"""
+
+        client = KitsuneClient(KITSUNE_SERVER_URL, max_retries=2)
+        question_id = 12345
+
+        # Simulate HTTP 500 error
+        error = requests.exceptions.HTTPError()
+        error.response = unittest.mock.Mock(status_code=500)
+
+        with unittest.mock.patch.object(client, 'fetch', side_effect=error) as mock_fetch, \
+             unittest.mock.patch('time.sleep') as mock_sleep, \
+             self.assertLogs(level='ERROR') as cm:
+            result = list(client.get_question_answers(question_id))
+            self.assertEqual(result, [])
+            self.assertIn(f"Problem getting Kitsune answers for question id {question_id}", cm.output[-1])
+            self.assertEqual(mock_fetch.call_count, 3)  # initial + 2 retries
+            self.assertEqual(mock_sleep.call_count, 2)  # sleep called for each retry
 
 
 if __name__ == "__main__":
