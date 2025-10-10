@@ -1,9 +1,0 @@
----
-title: Handle Kitsune server errors
-category: fixed
-author: Jose Javier Merchante <jjmerchante@bitergia.com>
-issue: null
-notes: >
-  This change adds retry logic for HTTP 500 errors when
-  fetching answers. Ignores the answers after several
-  retries.

@@ -1,5 +1,14 @@
 # Releases
 
+## perceval-mozilla 1.2.1 - (2025-10-10)
+
+**Bug fixes:**
+
+ * Handle Kitsune server errors\
+   This change adds retry logic for HTTP 500 errors when fetching
+   answers. Ignores the answers after several retries.
+
+
 ## perceval-mozilla 1.2.0 - (2025-09-23)
 
 **New features:**
