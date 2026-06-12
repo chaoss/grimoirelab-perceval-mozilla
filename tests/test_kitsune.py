@@ -312,7 +312,12 @@ class TestKitsuneCommand(unittest.TestCase):
         self.assertTrue(parsed_args.ssl_verify)
         self.assertTrue(parsed_args.sleep_for_rate)
         self.assertEqual(parsed_args.max_retries, 10)
+        self.assertGreaterEqual(parsed_args.min_request_interval, 1.0)
         self.assertIsNone(parsed_args.blacklist_ids)
+
+        args = [KITSUNE_SERVER_URL, '--min-request-interval', '2.5']
+        parsed_args = parser.parse(*args)
+        self.assertEqual(parsed_args.min_request_interval, 2.5)
 
         args = [KITSUNE_SERVER_URL,
                 '--no-ssl-verify',
@@ -364,6 +369,34 @@ class TestKitsuneClient(unittest.TestCase):
         self.assertEqual(kitsune.sleep_for_rate, True)
         self.assertEqual(kitsune.sleep_time, 100)
         self.assertEqual(kitsune.max_retries, 10)
+
+    def test_default_min_request_interval(self):
+        """By default the client waits at least 1s between API calls.
+
+        The Kitsune/SUMO API rate-limits clients that issue requests faster
+        than roughly one per second, so the default spacing must be >= 1s.
+        """
+        kitsune = KitsuneClient(KITSUNE_SERVER_URL)
+
+        self.assertGreaterEqual(kitsune.min_request_interval, 1.0)
+
+    @httpretty.activate
+    def test_fetch_respects_min_request_interval(self):
+        """Consecutive requests are spaced by at least min_request_interval."""
+
+        HTTPServer.routes()
+        HTTPServer.requests_http = []
+
+        interval = 1.5
+        client = KitsuneClient(KITSUNE_SERVER_URL, min_request_interval=interval)
+
+        with unittest.mock.patch('time.sleep') as mock_sleep:
+            # Two pages -> two API requests -> one inter-request gap.
+            list(client.get_questions(from_date=str_to_datetime("1970-01-01")))
+
+        slept = [call.args[0] for call in mock_sleep.call_args_list if call.args]
+        self.assertTrue(slept, "client should sleep between requests")
+        self.assertGreaterEqual(max(slept), interval - 0.1)
 
     @httpretty.activate
     def test_get_questions(self):
