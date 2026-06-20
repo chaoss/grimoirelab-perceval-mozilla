@@ -1,0 +1,11 @@
+---
+title: 'Kitsune: throttle API requests to respect the rate limit'
+category: fixed
+author: Arron Atchison <aatchison@thunderbird.net>
+issue: null
+notes: >
+    The Kitsune backend now waits at least one second between consecutive
+    API requests. The support.mozilla.org API rate-limits clients that
+    request faster than roughly once per second, which could abort or stall
+    data collection. The interval is configurable through the new
+    `--min-request-interval` option (default: 1.0s).
