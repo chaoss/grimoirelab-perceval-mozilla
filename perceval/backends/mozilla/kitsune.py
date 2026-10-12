@@ -48,6 +48,10 @@ CATEGORY_QUESTION = "question"
 DEFAULT_SLEEP_TIME = 180
 MAX_RETRIES = 5
 
+# The Kitsune/SUMO API rate-limits clients that issue requests faster than
+# roughly one per second, so requests are spaced by at least this many seconds.
+MIN_REQUEST_INTERVAL = 1.0
+
 
 class Kitsune(Backend):
     """Kitsune backend for Perceval.
@@ -68,16 +72,19 @@ class Kitsune(Backend):
         of connection problems
     :param max_retries: number of max retries to a data source
         before raising a RetryError exception
+    :param min_request_interval: minimum number of seconds between consecutive
+        API requests (the Kitsune/SUMO API rate-limits faster clients)
     :param blacklist_ids: ids of items that must not be retrieved
     """
-    version = '2.1.0'
+    version = '2.2.0'
 
     CATEGORIES = [CATEGORY_QUESTION]
     ORIGIN_UNIQUE_FIELD = OriginUniqueField(name='id', type=int)
 
     def __init__(self, url=None, tag=None, archive=None, ssl_verify=True,
                  sleep_for_rate=False, sleep_time=DEFAULT_SLEEP_TIME,
-                 max_retries=MAX_RETRIES, blacklist_ids=None):
+                 max_retries=MAX_RETRIES, min_request_interval=MIN_REQUEST_INTERVAL,
+                 blacklist_ids=None):
         if not url:
             url = KITSUNE_URL
         origin = url
@@ -88,6 +95,7 @@ class Kitsune(Backend):
         self.sleep_for_rate = sleep_for_rate
         self.sleep_time = sleep_time
         self.max_retries = max_retries
+        self.min_request_interval = min_request_interval
 
         self.client = None
 
@@ -204,7 +212,8 @@ class Kitsune(Backend):
         """Init client"""
 
         return KitsuneClient(self.url, self.ssl_verify, self.sleep_for_rate,
-                             self.sleep_time, self.max_retries)
+                             self.sleep_time, self.max_retries,
+                             self.min_request_interval)
 
 
 class KitsuneClient(HttpClient):
@@ -218,6 +227,8 @@ class KitsuneClient(HttpClient):
     :param sleep_for_rate: sleep until rate limit is reset
     :param sleep_time: seconds to sleep for rate limit
     :param max_retries: number of max retries for RateLimit
+    :param min_request_interval: minimum number of seconds between consecutive
+        API requests (the Kitsune/SUMO API rate-limits faster clients)
 
     :raises HTTPError: when an error occurs doing the request
     """
@@ -225,12 +236,15 @@ class KitsuneClient(HttpClient):
     ITEMS_PER_PAGE = 20  # Items per page in Kitsune API
 
     def __init__(self, url, ssl_verify=True, sleep_for_rate=False,
-                 sleep_time=DEFAULT_SLEEP_TIME, max_retries=MAX_RETRIES):
+                 sleep_time=DEFAULT_SLEEP_TIME, max_retries=MAX_RETRIES,
+                 min_request_interval=MIN_REQUEST_INTERVAL):
         super().__init__(urijoin(url, '/api/2/'), ssl_verify=ssl_verify)
 
         self.sleep_for_rate = sleep_for_rate
         self.sleep_time = sleep_time
         self.max_retries = max_retries
+        self.min_request_interval = min_request_interval
+        self._last_request = None
 
     def get_questions(self, from_date):
         """Retrieve questions from older to newer updated starting offset"""
@@ -319,6 +333,19 @@ class KitsuneClient(HttpClient):
         else:
             raise RateLimitError(cause=cause, seconds_to_reset=self.sleep_time)
 
+    def _wait_for_min_interval(self):
+        """Sleep so consecutive requests are at least min_request_interval apart.
+
+        The Kitsune/SUMO API rate-limits clients that request faster than
+        roughly once per second. Only the remaining time since the previous
+        request is slept, so slow requests are not delayed unnecessarily.
+        """
+        if self.min_request_interval > 0 and self._last_request is not None:
+            wait = self.min_request_interval - (time.monotonic() - self._last_request)
+            if wait > 0:
+                time.sleep(wait)
+        self._last_request = time.monotonic()
+
     def fetch(self, url, params):
         """Return the textual content associated to the Response object"""
 
@@ -327,6 +354,8 @@ class KitsuneClient(HttpClient):
 
         retries = self.max_retries
         while retries >= 0:
+            # Throttle before each request to respect the API rate limit.
+            self._wait_for_min_interval()
             try:
                 response = super().fetch(url, payload=params)
                 return response.text
@@ -336,9 +365,6 @@ class KitsuneClient(HttpClient):
                     self.sleep_for_rate_limit()
                 else:
                     raise ex
-            finally:
-                # Avoids to do requests too fast
-                time.sleep(0.5)
 
         raise HttpClientError(cause="Max retries exceeded")
 
@@ -373,4 +399,8 @@ class KitsuneCommand(BackendCommand):
         group.add_argument('--sleep-time', dest='sleep_time',
                            default=DEFAULT_SLEEP_TIME, type=int,
                            help="sleeping time between API call retries")
+        group.add_argument('--min-request-interval', dest='min_request_interval',
+                           default=MIN_REQUEST_INTERVAL, type=float,
+                           help="minimum seconds between consecutive API requests "
+                                "(default: %s)" % MIN_REQUEST_INTERVAL)
         return parser
